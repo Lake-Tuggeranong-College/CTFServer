@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"  # Accessible to other devices on the network
+    volumes:
+      - ./src:/var/www/html  # Mount PHP files from ./src
+    networks:
+      - public
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: devdb
+      MYSQL_USER: devuser
+      MYSQL_PASSWORD: devpass
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+    ports:
+      - "3306:3306"
+
+    networks:
+      - public
+
+volumes:
+  mysql-data:
+
+networks:
+  public:
+    driver: bridge
+  private:
+    internal: true
