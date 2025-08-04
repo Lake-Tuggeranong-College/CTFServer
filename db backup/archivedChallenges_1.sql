@@ -1,3 +1,4 @@
+-- Active: 1753668261437@@192.168.230.1@3306@devdb68.230.1@3306@devdb
 create table archivedChallenges
 (
     ID             int auto_increment

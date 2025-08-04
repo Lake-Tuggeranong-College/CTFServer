@@ -16,10 +16,10 @@ services:
 
   mysql:
     image: mysql:8.0
-    restart: unless-stopped
+    restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: devdb
+      MYSQL_DATABASE: CyberCity
       MYSQL_USER: devuser
       MYSQL_PASSWORD: devpass
     volumes:
