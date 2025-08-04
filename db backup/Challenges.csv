@@ -1,0 +1,7 @@
+ID,challengeTitle,challengeText,flag,pointsValue,moduleName,moduleValue,dockerChallengeID,container,Image,Enabled,categoryID
+73,TrafficLights,Traffic Jammed,CTF{operation_greenwave},5,TrafficLights,1,,-1,trafficLights.png,2,1
+74,Windmill,Turbine Takeover,CTF{w1ndm1ll_w1nn3r},5,Windmill,1,,-1,windmill.png,2,2
+75,GarageDoor,Open Sesame,CTF{Alohomora},5,GarageDoor,2,3,-1,windmill.png,2,2
+79,Alarm,Alarm,CTF{Alarm},5,Alarm,1,2,1,trafficLights.png,2,1
+80,6,6,6,6,module6,"",6,6,"",1,6
+81,[New Challenge],[Null],[Null],1,[Null],,,,[Null],1,

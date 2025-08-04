@@ -1,0 +1,12 @@
+[Unit]
+Description=Keep python script that dumps the SQL binlog running
+After=network.target
+
+[Service]
+Type=idle
+Restart=on-failure
+#User=root
+ExecStart=/usr/bin/python3 /var/www/CyberCity/DatabaseToMQTT.py
+
+[Install]
+WantedBy=multi-user.target
