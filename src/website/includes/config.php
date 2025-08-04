@@ -5,10 +5,11 @@
 
 
     // Had to be done because PHPStorm wouldn't play ball
-    $serverHost = "172.18.0.2/16";
+    $serverHost = "192.168.230.1";
     $dbUsr = "devuser";
-    $dbPwd = "rootpassword";
+    $dbPwd = "devpass";
     $dbName = "devdb";
+
 
 
 date_default_timezone_set("Australia/Sydney");
@@ -20,7 +21,6 @@ date_default_timezone_set("Australia/Sydney");
         PDO::ATTR_EMULATE_PREPARES      => false,                   // Use native prepared statements
         PDO::ATTR_PERSISTENT            => true,                    // Keeps database connection alive across scripts
     ];
-
 
     // Create PDO instance
     try {
