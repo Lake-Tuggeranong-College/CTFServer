@@ -8,7 +8,7 @@
     $serverHost = "192.168.230.1";
     $dbUsr = "devuser";
     $dbPwd = "devpass";
-    $dbName = "CyberCity";
+    $dbName = "devdb";
 
 
 

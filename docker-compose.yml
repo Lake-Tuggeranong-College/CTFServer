@@ -19,7 +19,7 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: CyberCity
+      MYSQL_DATABASE: devdb
       MYSQL_USER: devuser
       MYSQL_PASSWORD: devpass
     volumes:

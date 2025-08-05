@@ -8,7 +8,6 @@
 
 
 
-
 <div class = "wideBox">
 
         <div class = "title" >
