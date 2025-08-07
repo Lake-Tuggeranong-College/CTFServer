@@ -1,0 +1,12 @@
+[Unit]
+Description=Keep python script that runs dynamic docker containers running
+After=network.target
+
+[Service]
+Type=idle
+Restart=on-failure
+#User=root
+ExecStart=/usr/bin/python3 /var/www/CyberCity/DatabaseToDocker.py
+
+[Install]
+WantedBy=multi-user.target

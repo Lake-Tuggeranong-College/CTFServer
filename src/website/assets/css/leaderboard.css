@@ -1,0 +1,175 @@
+.leaderboard-container {
+    position: relative;
+    margin-left: 3rem;
+    margin-right: 3rem;
+    z-index: 10;
+}
+
+.top-three-ranking .leaderboard-item {
+    position: relative;
+    width: 9rem;
+    height: 11.5rem;
+    text-align: center;
+    padding: 2.8rem 0 0;
+    margin: 1rem 1rem 2rem;
+    border-radius: 0.5rem;
+    transform-origin: bottom;
+    cursor: pointer;
+    transition: transform 200ms ease-in-out;
+    box-shadow: 0 0 4rem 0 rgba(0, 0, 0, 0.1), 0 1rem 2rem 0rem rgba(0, 0, 0, 0.4);
+}
+
+.top-three-ranking .leaderboard-item .user-profile {
+    position: absolute;
+    top: 0.3rem;
+    left: 2.5rem;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 1rem;
+
+    /* box-shadow: 0 0 1rem 0 rgba(0, 0, 0, 0.2), 0 1rem 1rem -0.5rem rgba(0, 0, 0, 0.3); */
+}
+
+.top-three-ranking .leaderboard-item .user-position {
+    top: 20rem;
+    font-weight: 900;
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.top-three-ranking .leaderboard-item .user-name {
+margin-top: 2rem;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    color: rgb(255, 255, 255)
+}
+
+.top-three-ranking .leaderboard-item .user-score {
+    opacity: 0.8;
+    color: #f8f9fa;
+}
+
+.top-three-ranking .leaderboard-item .user-score:after {
+    display: block;
+    content: "points";
+    color: rgb(255, 255, 255);
+    opacity: 1;
+}
+
+.top-three-ranking .leaderboard-item.first-place {
+    width: 10rem;
+    height: 11.5rem;
+    padding-top: 3.5rem;
+    background: linear-gradient(#7a5008 30%, #d59725) ;
+}
+
+.top-three-ranking .leaderboard-item.second-place {
+    width: 10rem;
+    height: 11.5rem;
+    padding-top: 3.5rem;
+    background: linear-gradient(#3c3b3b 30%, #989898) ;
+}
+
+.top-three-ranking .leaderboard-item.third-place {
+    width: 10rem;
+    height: 11.5rem;
+    padding-top: 3.5rem;
+    background: linear-gradient(#40280c 30%, #9e621e) ;
+}
+
+.top-three-ranking .leaderboard-item.first-place .user-profile {
+    width: 5rem;
+    height: 5rem;
+    left: 2.5rem;
+    background-color: rgba(0, 0, 0, 0);
+    content: url(/website/assets/img/FirstPlace.png);
+}
+
+.top-three-ranking .leaderboard-item.second-place .user-profile {
+    width: 5rem;
+    height: 5rem;
+    left: 2.5rem;
+    background-color: rgba(0, 0, 0, 0);
+    content: url(/website/assets/img/SecondPlace.png);
+}
+
+.top-three-ranking .leaderboard-item.third-place .user-profile {
+    width: 5rem;
+    height: 5rem;
+    left: 2.5rem;
+    content: url(/website/assets/img/ThirdPlace.png);
+
+}
+
+.top-three-ranking .leaderboard-item:hover {
+    transform: scale(1.05);
+}
+
+.leaderboard-list .leaderboard-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 4rem;
+    border-radius: 4rem;
+    margin-bottom: 2rem;
+    margin-left: 25%;
+    margin-right: 25%;
+    background-color: rgb(40, 40, 50);
+    transform-origin: left;
+    cursor: pointer;
+    transition: transform 200ms ease-in-out;
+    box-shadow: 0 0 4rem 0 rgba(0, 0, 0, 0.1), 0 1rem 2rem 0rem rgba(0, 0, 0, 0.6);
+}
+
+.leaderboard-list .leaderboard-item .user-position {
+    font-weight: 900;
+    position: absolute;
+    left: 1rem;
+    text-align: center;
+    font-size: 1.25rem;
+    width: 1.5rem;
+    color: #f8f9fa;
+    opacity: 0.6;
+    transition: opacity 200ms ease-in-out;
+}
+
+.leaderboard-list .leaderboard-item .user-profile {
+    width: 2rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    margin-right: 1rem;
+
+}
+
+.leaderboard-list .leaderboard-item .user-name {
+    flex-grow: 2;
+    flex-basis: 10rem;
+    font-size: 1.1rem;
+    color: rgb(255, 255, 255)
+}
+
+.leaderboard-list .leaderboard-item .user-score {
+    margin-right: 1.5rem;
+    opacity: 1;
+    color: rgb(255, 255, 255);
+}
+
+.leaderboard-list .leaderboard-item .user-score:after {
+    margin-right: 1rem;
+    content: " points";
+    color: rgb(150, 150, 150);
+    opacity: 1;
+}
+
+.leaderboard-list .leaderboard-item:hover {
+    transform: scale(1.02);
+    background-color: #495057;
+}
+
+.leaderboard-list .leaderboard-item:hover .user-position {
+}
