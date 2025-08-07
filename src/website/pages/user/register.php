@@ -1,8 +1,9 @@
-    <?php include "../../includes/template.php";
+<?php 
+    include "../../includes/template.php";
     /** @var $conn */
 
     if (!authorisedAccess(true, true, true)) {
-        header("Location:../../index.php");
+        header("Location:/");
     }
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -18,8 +19,12 @@
         $numberOfUsers = (int)$data[0];
 
         if ($numberOfUsers > 0) {
+                        $_SESSION["flash_message"] = "<div class='bg-success'>This username has already been created!</div>";
+
+            header('Location:./register.php ');
             echo "This username has already been taken.";
-            header('Location: '. $_SERVER['REQUEST_URI']);
+            
+
         } else {
             $sql = "INSERT INTO Users (Username, user_email, HashedPassword, AccessLevel, Enabled) VALUES (:newUsername, :newEmail, :newPassword, :newAccessLevel, 1)";
             $stmt = $conn->prepare($sql);

@@ -1,6 +1,6 @@
 <?php
     // Base-line redirect URL so the SSH doesn't get flipping confused af
-    const BASE_URL = '/src/website/';
+    const BASE_URL = '/website/';
 
 
 
@@ -10,8 +10,10 @@
     $dbPwd = "devpass";
     $dbName = "devdb";
 
+    
 
 
+    
 date_default_timezone_set("Australia/Sydney");
 
     // PDO options for maximum error handling
