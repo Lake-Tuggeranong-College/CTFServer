@@ -58,9 +58,11 @@ function checkFlag()
             $query = $conn->query("SELECT * FROM `UserChallenges` WHERE `challengeID` ='$challengeID' and `userID` = '$user'");
             $row = $query->fetch();
             if ($query->rowCount() > 0) {
-                $_SESSION["flash_message"] = "<div class='bg-warning'>Flag Success! Challenge already completed, no points awarded</div>";
                 header("Location:./challengesList.php");
+                $_SESSION["flash_message"] = "<div class='bg-warning'>Flag Success! Challenge already completed, no points awarded</div>";
+                
             } else {
+                header("Location:./challengesList.php?projectID=$projectID");
                 $insert = "INSERT INTO `UserChallenges` (userID, challengeID) VALUES ('$user', '$challengeID')";
                 $insert = $conn->prepare($insert);
                 $insert->execute();
@@ -84,7 +86,7 @@ function checkFlag()
                 $stmt = $conn->prepare($sql);
                 $stmt->execute();
                 $_SESSION["flash_message"] = "<div class='bg-success'>Success!</div>";
-                header("Location:./challengesList.php?projectID=$projectID");
+                
             }
         } else {
             $_SESSION["flash_message"] = "<div class='bg-danger'>Flag failed - try again</div>";
