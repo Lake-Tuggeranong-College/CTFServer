@@ -1,4 +1,4 @@
-create table eventLog
+create table IF NOT EXISTS eventLog
 (
     id         int auto_increment
         primary key,

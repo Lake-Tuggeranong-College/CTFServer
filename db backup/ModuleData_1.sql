@@ -1,4 +1,4 @@
-create table ModuleData
+create table IF NOT EXISTS ModuleData
 (
     id       int auto_increment
         primary key,

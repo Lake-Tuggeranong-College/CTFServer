@@ -1,4 +1,4 @@
-create table Users
+create table IF NOT EXISTS Users
 (
     ID              int auto_increment
         primary key,

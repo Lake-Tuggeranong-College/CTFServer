@@ -1,4 +1,4 @@
-create table DockerContainers
+create table IF NOT EXISTS DockerContainers
 (
     ID              int auto_increment
         primary key,

@@ -1,5 +1,5 @@
 -- Active: 1753668261437@@192.168.230.1@3306@devdb
-create table archivedChallenges
+create table IF NOT EXISTS archivedChallenges
 (
     ID             int auto_increment
         primary key,

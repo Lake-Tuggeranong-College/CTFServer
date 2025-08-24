@@ -1,4 +1,4 @@
-create table ContactUs
+create table IF NOT EXISTS ContactUs
 (
     ID       int auto_increment
         primary key,

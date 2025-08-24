@@ -1,4 +1,4 @@
-create table archivedRegisteredModules
+create table IF NOT EXISTS archivedRegisteredModules
 (
     ID              int auto_increment
         primary key,
