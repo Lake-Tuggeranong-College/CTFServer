@@ -1,4 +1,4 @@
-create table ProjectChallenges
+create table IF NOT EXISTS ProjectChallenges
 (
     id           int auto_increment
         primary key,

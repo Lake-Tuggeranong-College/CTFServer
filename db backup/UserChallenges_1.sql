@@ -1,4 +1,4 @@
-create table UserChallenges
+create table IF NOT EXISTS UserChallenges
 (
     id          int auto_increment
         primary key,

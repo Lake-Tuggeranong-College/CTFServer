@@ -1,4 +1,4 @@
-create table Projects
+create table IF NOT EXISTS Projects
 (
     project_id   int auto_increment
         primary key,

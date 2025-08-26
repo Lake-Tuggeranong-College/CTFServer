@@ -1,4 +1,4 @@
-create table Learn
+create table IF NOT EXISTS Learn
 (
     ID   int auto_increment
         primary key,

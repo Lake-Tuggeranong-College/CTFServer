@@ -1,4 +1,4 @@
-create table Category
+create table IF NOT EXISTS Category
 (
     CategoryName text not null,
     id           int auto_increment
