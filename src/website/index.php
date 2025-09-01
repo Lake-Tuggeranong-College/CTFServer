@@ -6,9 +6,7 @@
 
 
 
-<?php
-echo "Hello World";
-?>
+
 
 
 <div class = "wideBox">
