@@ -1,8 +1,9 @@
 services:
   php:
     build:
-      context: ./php
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./php/Dockerfile
+    image: php:8.2-apache
     ports:
       - "80:80"  # Accessible to other devices on the network
     volumes:
@@ -13,7 +14,8 @@ services:
       - mysql
 
   mysql:
-    image: mysql:8.0
+    image: mariadb:latest
+    container_name: mysql
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -26,6 +28,20 @@ services:
     ports:
       - "3306:3306"
 
+    networks:
+      - public
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql # Link to the MariaDB container service name
+      MYSQL_ROOT_PASSWORD: rootpassword # Use the same root password as MariaDB
+      PMA_PORT: 3306 # MariaDB's internal port
+    ports:
+      - "8081:80" # Expose phpMyAdmin on host port 8081
+    depends_on:
+      - mysql # Ensure MariaDB starts before phpMyAdmin
     networks:
       - public
 
