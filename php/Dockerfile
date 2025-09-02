@@ -6,4 +6,4 @@ RUN docker-php-ext-install pdo pdo_mysql
 # Enable Apache mod_rewrite if needed
 RUN a2enmod rewrite
 
-EXPOSE 80
+EXPOSE 8080

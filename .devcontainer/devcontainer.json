@@ -1,5 +1,5 @@
 {
-    "name": "PHP Apache + MariaDB Dev Container",
+    "name": "CTF Server",
     "dockerComposeFile": [
         "../docker-compose.yml"
     ],

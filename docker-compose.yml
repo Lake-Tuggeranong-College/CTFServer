@@ -5,9 +5,9 @@ services:
       dockerfile: ./php/Dockerfile
     image: php:8.2-apache
     ports:
-      - "80:80"  # Accessible to other devices on the network
+      - "8080:80"  # Accessible to other devices on the network
     volumes:
-      - ./src:/var/www/html  # Mount PHP files from ./src
+      - .:/var/www/html  # Mount PHP files from the current directory
     networks:
       - public
     depends_on:
