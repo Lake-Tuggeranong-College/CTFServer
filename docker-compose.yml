@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:80"  # Accessible to other devices on the network
     volumes:
-      - .:/var/www/html  # Mount PHP files from the current directory
+      - ./src/:/var/www/html  # Mount PHP files from the current directory
     networks:
       - public
     depends_on:
