@@ -45,6 +45,21 @@ services:
     networks:
       - public
 
+  mosquitto:
+    image: eclipse-mosquitto:latest # Specify your desired Mosquitto version
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883" # MQTT standard port
+      # - "9001:9001" # MQTT over websockets port (optional)
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+    environment:
+      TZ: "Australia/Sydney" # Set your timezone
+
+
 volumes:
   mysql-data:
 

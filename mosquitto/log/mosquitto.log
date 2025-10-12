@@ -1,0 +1,16 @@
+1760305561: mosquitto version 2.0.15 starting
+1760305561: Config loaded from /mosquitto/config/mosquitto.conf.
+1760305561: Opening ipv4 listen socket on port 1883.
+1760305561: Opening ipv6 listen socket on port 1883.
+1760305561: Opening websockets listen socket on port 9001.
+1760305561: mosquitto version 2.0.15 running
+1760305757: New connection from 140.82.114.21:49884 on port 1883.
+1760305757: New client connected from 140.82.114.21:49884 as mqtt-explorer-c61f1751 (p2, c1, k60).
+1760306057: mosquitto version 2.0.22 starting
+1760306057: Config loaded from /mosquitto/config/mosquitto.conf.
+1760306057: Opening ipv4 listen socket on port 1883.
+1760306057: Opening ipv6 listen socket on port 1883.
+1760306057: Opening websockets listen socket on port 9001.
+1760306057: mosquitto version 2.0.22 running
+1760306058: New connection from 140.82.114.21:51762 on port 1883.
+1760306058: New client connected from 140.82.114.21:51762 as mqtt-explorer-c61f1751 (p2, c1, k60).
