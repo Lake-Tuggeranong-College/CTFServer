@@ -21,11 +21,12 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: devdb
+      MYSQL_DATABASE: CyberCity
       MYSQL_USER: devuser
       MYSQL_PASSWORD: devpass
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./init_scripts:/docker-entrypoint-initdb.d # 👈 ADD THIS LINE
 
     ports:
       - "3306:3306"
@@ -76,7 +77,7 @@ services:
     environment:
       # ... (Existing environment variables) ...
       DB_HOST: CTF-MySQL
-      DB_NAME: devdb
+      DB_NAME: CyberCity
       DB_USER: devuser
       DB_PASS: devpass
       MQTT_HOST: CTF-MQTT-Broker
