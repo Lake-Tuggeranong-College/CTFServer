@@ -18,7 +18,7 @@ services:
     # Using MariaDB is fully compatible with MySQL client libraries (like the one used in db_publisher)
     image: mariadb:latest 
     container_name: CTF-MySQL
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: CyberCity
