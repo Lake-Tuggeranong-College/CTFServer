@@ -74,23 +74,24 @@ services:
       - mysql
       - mosquitto
     environment:
-      # Database connection details (using the MariaDB/MySQL credentials)
+      # ... (Existing environment variables) ...
       DB_HOST: CTF-MySQL
       DB_NAME: devdb
       DB_USER: devuser
       DB_PASS: devpass
-      # MQTT connection details
       MQTT_HOST: CTF-MQTT-Broker
       MQTT_PORT: 1883
-      # Application settings
-      POLL_INTERVAL_SECONDS: 5 # Time between database checks
-      MQTT_TOPIC: "module/data/value" # Topic to publish the column data to
+      POLL_INTERVAL_SECONDS: 5
+    volumes:
+      # ADD THIS LINE: Persist the tracking file
+      - db_publisher_data:/app
     networks:
       - public
 
 
 volumes:
   mysql-data:
+  db_publisher_data:
 
 networks:
   public:

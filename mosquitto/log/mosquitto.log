@@ -180,3 +180,9 @@
 1760315053: New client connected from 140.82.114.21:42028 as mqtt-explorer-c61f1751 (p2, c1, k60).
 1760315054: New connection from 172.18.0.3:59953 on port 1883.
 1760315054: New client connected from 172.18.0.3:59953 as auto-EDAEA3A7-1AD6-2BBF-D16D-7BB2052AE9F9 (p2, c1, k60).
+1760315231: Client auto-EDAEA3A7-1AD6-2BBF-D16D-7BB2052AE9F9 closed its connection.
+1760315231: New connection from 172.18.0.3:37991 on port 1883.
+1760315231: New client connected from 172.18.0.3:37991 as auto-8207D964-76D5-7A69-E82F-C76DC13447F5 (p2, c1, k60).
+1760315249: Client mqtt-explorer-c61f1751 disconnected.
+1760315250: New connection from 140.82.114.21:23721 on port 1883.
+1760315250: New client connected from 140.82.114.21:23721 as mqtt-explorer-c61f1751 (p2, c1, k60).
