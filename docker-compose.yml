@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./php/Dockerfile
+    container_name: CTF-PHP
     image: php:8.2-apache
     ports:
       - "8080:80"  # Accessible to other devices on the network
@@ -14,8 +15,9 @@ services:
       - mysql
 
   mysql:
-    image: mariadb:latest
-    container_name: mysql
+    # Using MariaDB is fully compatible with MySQL client libraries (like the one used in db_publisher)
+    image: mariadb:latest 
+    container_name: CTF-MySQL
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
@@ -33,7 +35,7 @@ services:
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
+    container_name: CTF-PHPMyAdmin
     environment:
       PMA_HOST: mysql # Link to the MariaDB container service name
       MYSQL_ROOT_PASSWORD: rootpassword # Use the same root password as MariaDB
@@ -41,13 +43,13 @@ services:
     ports:
       - "8081:80" # Expose phpMyAdmin on host port 8081
     depends_on:
-      - mysql # Ensure MariaDB starts before phpMyAdmin
+      - mysql # Use the service name
     networks:
       - public
 
   mosquitto:
     image: eclipse-mosquitto:latest # Specify your desired Mosquitto version
-    container_name: mqtt-broker
+    container_name: CTF-MQTT-Broker
     ports:
       - "1883:1883" # MQTT standard port
       # - "9001:9001" # MQTT over websockets port (optional)
@@ -55,9 +57,36 @@ services:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
-    restart: unless-stopped
+    # restart: unless-stopped
     environment:
       TZ: "Australia/Sydney" # Set your timezone
+    networks:
+      - public # Ensure it's on the same network as db_publisher
+
+  # ⚡️ New Service: Custom DB-to-MQTT Publisher
+  db_publisher:
+    build: 
+      context: ./db_publisher_app
+      dockerfile: Dockerfile
+    container_name: CTF-DB-Publisher
+    restart: on-failure
+    depends_on:
+      - mysql
+      - mosquitto
+    environment:
+      # Database connection details (using the MariaDB/MySQL credentials)
+      DB_HOST: CTF-MySQL
+      DB_NAME: devdb
+      DB_USER: devuser
+      DB_PASS: devpass
+      # MQTT connection details
+      MQTT_HOST: CTF-MQTT-Broker
+      MQTT_PORT: 1883
+      # Application settings
+      POLL_INTERVAL_SECONDS: 5 # Time between database checks
+      MQTT_TOPIC: "module/data/value" # Topic to publish the column data to
+    networks:
+      - public
 
 
 volumes:
@@ -67,4 +96,4 @@ networks:
   public:
     driver: bridge
   private:
-    internal: true
+    internal: true # This network isn't used by the new service, but it's kept.

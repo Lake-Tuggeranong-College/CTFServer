@@ -5,7 +5,7 @@
 
 
     // Had to be done because PHPStorm wouldn't play ball
-    $serverHost = "mysql";
+    $serverHost = "CTF-MySQL";
     $dbUsr = "devuser";
     $dbPwd = "devpass";
     $dbName = "devdb";
