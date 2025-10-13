@@ -26,7 +26,7 @@ services:
       MYSQL_PASSWORD: devpass
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init_scripts:/docker-entrypoint-initdb.d # 👈 ADD THIS LINE
+      - ./init_scripts:/docker-entrypoint-initdb.d
 
     ports:
       - "3306:3306"
@@ -49,22 +49,20 @@ services:
       - public
 
   mosquitto:
-    image: eclipse-mosquitto:latest # Specify your desired Mosquitto version
+    image: eclipse-mosquitto:latest 
     container_name: CTF-MQTT-Broker
     ports:
       - "1883:1883" # MQTT standard port
-      # - "9001:9001" # MQTT over websockets port (optional)
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
-    # restart: unless-stopped
     environment:
       TZ: "Australia/Sydney" # Set your timezone
     networks:
       - public # Ensure it's on the same network as db_publisher
 
-  # ⚡️ New Service: Custom DB-to-MQTT Publisher
+  # Custom DB-to-MQTT Publisher
   db_publisher:
     build: 
       context: ./db_publisher_app
@@ -75,7 +73,6 @@ services:
       - mysql
       - mosquitto
     environment:
-      # ... (Existing environment variables) ...
       DB_HOST: CTF-MySQL
       DB_NAME: CyberCity
       DB_USER: devuser
@@ -84,7 +81,6 @@ services:
       MQTT_PORT: 1883
       POLL_INTERVAL_SECONDS: 5
     volumes:
-      # ADD THIS LINE: Persist the tracking file
       - db_publisher_data:/app
     networks:
       - public
@@ -98,4 +94,4 @@ networks:
   public:
     driver: bridge
   private:
-    internal: true # This network isn't used by the new service, but it's kept.
+    internal: true # No external access
