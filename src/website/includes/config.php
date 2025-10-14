@@ -8,7 +8,7 @@
     $serverHost = "CTF-MySQL";
     $dbUsr = "devuser";
     $dbPwd = "devpass";
-    $dbName = "devdb";
+    $dbName = "CyberCity";
 
     
 

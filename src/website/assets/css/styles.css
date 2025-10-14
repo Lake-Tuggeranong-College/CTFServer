@@ -1,133 +1,177 @@
-.navbarCustom {
+.navbar {
     /* background: #232526; */
-
     background: rgba(35,37,38,0.5);
-
-    font-size: 1vw;
+    font-size: 1em;
     text-overflow: ellipsis;
-
-
     color: white;
     border-radius: 1rem;
     margin-left: 1%;
     margin-right: 1%;
     margin-top: 1%;
     padding: 0.5%;
-
-
-
 }
 
-
-
-.center {
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    width: 50%;
-}
-
-.contactTable{
-    border: white;
-    border-color: white;
-    border-bottom-style: solid;
-}
-
-.leaderboard{
-    border: white;
-    border-color: white;
-    border-bottom-style: solid;
-}
-
-body {
-    background: linear-gradient(to bottom right, black 0%, #232526, lightskyblue 100%)
-    , radial-gradient(50% 90% at 30% 150%, hotpink, #232526)
-    , radial-gradient(100% 150% at -33% 5%, greenyellow, #232526);
-    background-blend-mode: overlay;
-
-
-    -webkit-font-smoothing: antialiased;
-    margin: 0;
-    padding: 5px;
-    width: auto;
-    height: auto;
-    color: white;
-
-}
-
-
-h1{
-    padding: 2%;
-    color: white;
-    font-size: 3.8rem;
-    line-height: 4.4rem;
-}
-
-input {
-    margin-left: 10px;
-}
-
-a {
-    color: white;
-}
-
-.centerBox {
-    background: rgba(35,37,38,0.5);
-    border-radius: 1rem;
-    padding: 1rem;
-    text-align: center;
+.subBox-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 40rem;
-    max-width: 50rem;
-    width: 100%;
-    margin: 5rem auto;
-}
-
-.wideBox {
-    background: rgba(35,37,38,0.5);
-    border-radius: 1rem;
-    padding: 1rem;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 48rem;
-
-
-
-    margin: 1%  ;
+    gap: 2rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 2rem;
 }
 
 .subBoxWhite {
-    background: rgba(65,67,68,0.5);
-    border-radius: 1rem;
-    padding: 1rem;
-    text-align: center;
+    flex: 1 1 45%;
+    padding: 1.5rem;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Light Mode */
+body.bg-light .subBoxWhite {
+    background-color: white;
+    color: #000;
+}
+
+/* Dark Mode */
+body.bg-dark .subBoxWhite {
+    background-color: #1f1f1f;
+    color: #f0f0f0;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .subBoxWhite {
+        flex: 1 1 100%;
+    }
+}
+
+.dynamicModeBox {
+    padding: 10rem;
+    border-radius: 12px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light mode */
+body.bg-light .dynamicModeBox {
+    background-color: white;
+    color: #000;
+}
+
+/* Dark mode */
+body.bg-dark .dynamicModeBox {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+}
+
+.heroCenter {
+    margin-top: 1rem;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 40rem;
-
-    max-width: 100%;
-    width: 100%;
-
-    margin: 1%  ;
+    min-height: 60vh; /* Adjust height as needed */
+    text-align: center;
 }
 
-
-.title {
-    margin-bottom: 2rem;
-}
-.title h1,
-.title h2 {
-    display: block;
-
+.shadowBox {
+    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15); /* subtle shading */
 }
 
-.flag-input {
-    min-width: 100%;
-    height: 50px;
-    border-radius: 10px;
+/* Font sizes */
+body.font-small {
+    font-size: 1.25rem;
+}
+
+body.font-medium {
+    font-size: 1.5rem;
+}
+
+body.font-large {
+    font-size: 1.75rem;
+}
+
+/* Line spacing classes matching JS */
+body.line-spacing-1 {
+    line-height: 1;
+    letter-spacing: normal;
+    word-spacing: normal;
+}
+
+body.line-spacing-1-5 {
+    line-height: 1.25;
+    letter-spacing: 0.15em;
+    word-spacing: 0.16em;
+}
+
+body.line-spacing-2 {
+    line-height: 1.75;
+    letter-spacing: 0.12em;
+    word-spacing: 0.20em;
+}
+
+/* Paragraph spacing for line spacing classes */
+body.line-spacing-1 p {
+    margin-bottom: 1.75em;
+}
+
+body.line-spacing-1-5 p {
+    margin-bottom: 2em;
+}
+
+body.line-spacing-2 p {
+    margin-bottom: 2.25em;
+}
+
+/* High contrast mode */
+body.high-contrast {
+    background-color: black !important;
+    color: yellow !important;
+}
+
+body.high-contrast a,
+body.high-contrast .nav-link,
+body.high-contrast .dropdown-menu {
+    color: yellow !important;
+    background-color: black !important;
+}
+
+body.high-contrast .btn-outline-primary {
+    color: yellow !important;
+    border-color: yellow !important;
+}
+
+body.high-contrast .btn-outline-primary:hover {
+    background-color: yellow !important;
+    color: black !important;
+}
+
+/* Active button highlight */
+.accessibility-font.active,
+#toggleContrast.active,
+.accessibility-line.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Add some spacing between Accessibility Features and user menu on right */
+.navbar-nav.ms-auto > li.nav-item.dropdown:first-child {
+    margin-right: 1rem;
+    margin-top: 0.5rem;
+/* Light mode text */
+body.bg-light {
+    color: #000;
+}
+
+/* Dark mode text */
+body.bg-dark {
+    color: #f0f0f0;
+}
+
+body.bg-light .form-text {
+    color: #212529; /* Bootstrap's default body text color */
+}
+
+body.bg-dark .form-text {
+    color: #f0f0f0; /* Light color for dark mode */
 }
