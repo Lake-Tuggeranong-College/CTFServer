@@ -68,7 +68,7 @@ services:
       context: ./db_publisher_app
       dockerfile: Dockerfile
     container_name: CTF-DB-Publisher
-    restart: on-failure
+    restart: unless-stopped
     depends_on:
       - mysql
       - mosquitto
@@ -82,6 +82,32 @@ services:
       POLL_INTERVAL_SECONDS: 5
     volumes:
       - db_publisher_data:/app
+    networks:
+      - public
+
+    
+  container_manager:
+    build:
+      context: ./container_manager_app
+      dockerfile: Dockerfile
+    container_name: CTF-ContainerManager
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: CTF-MySQL
+      DB_NAME: CyberCity
+      DB_USER: devuser
+      DB_PASS: devpass
+      # Configuration for challenge image, e.g., 'challenge-base-image:latest'
+      # The manager logic will need to handle which exact image to use based on challengeID
+      CHALLENGE_IMAGE_BASE: "challenge-base-image"
+      # Other necessary configuration like the duration for container cleanup (15 mins)
+      CLEANUP_DURATION_MINUTES: 15
+    # Important: The manager needs access to the Docker daemon to start/stop containers
+      TZ: "Australia/Sydney" # Set your timezone
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - public
 
