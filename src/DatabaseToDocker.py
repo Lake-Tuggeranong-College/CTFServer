@@ -49,9 +49,9 @@ def time_tracker():
 
 # MySQL connection settings
 db_config = {
-    'host': 'localhost',
-    'user': 'LTC',
-    'passwd': 'LTCpcgame5',
+    'host': 'CTF-MySQL',
+    'user': 'root',
+    'passwd': 'rootpassword',
     'port': 3306,
     'db': 'CyberCity'  # Replace with your actual database name
 }

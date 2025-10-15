@@ -6,9 +6,9 @@
 
     // Had to be done because PHPStorm wouldn't play ball
     $serverHost = "CTF-MySQL";
-    $dbUsr = "devuser";
-    $dbPwd = "devpass";
-    $dbName = "devdb";
+    $dbUsr = "root";
+    $dbPwd = "rootpassword";
+    $dbName = "CyberCity";
 
     
 

@@ -3,10 +3,10 @@
 include "../../includes/template.php";
 $challengeToLoad = $_GET["challengeID"] ?? -1;
 
-if (!authorisedAccess(false, true, true)) {
-    header("Location:../../index.php");
-    exit;
-}
+// if (!authorisedAccess(false, true, true)) {
+//     header("Location:../../index.php");
+//     exit;
+// }
 
 $sql = $conn->query("SELECT ID, moduleName, challengeTitle, challengeText, pointsValue, flag, dockerChallengeID FROM Challenges WHERE ID = $challengeToLoad ORDER BY ID DESC");
 $result = $sql->fetch();
