@@ -1,239 +1,354 @@
+#!/usr/bin/env python3
+from pymysqlreplication import BinLogStreamReader
+from pymysqlreplication.row_event import WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import pymysql
+import subprocess
+import threading
+from pathlib import Path
+import traceback
+import json
+import re
 
-import docker
-import mysql.connector
-from mysql.connector import Error
+# =========================
+# CONFIG
+# =========================
+DB = {'host':'CTF-MySQL','user':'devuser','passwd':'devpass','port':3306,'db':'CyberCity'}
+BINLOG_CONN = {'host':DB['host'],'port':DB['port'],'user':DB['user'],'passwd':DB['passwd']}
 
-# --- Configuration from Environment Variables ---
-DB_HOST = os.getenv("DB_HOST", "CTF-MySQL")
-DB_NAME = os.getenv("DB_NAME", "CyberCity")
-DB_USER = os.getenv("DB_USER", "devuser")
-DB_PASS = os.getenv("DB_PASS", "devpass")
-CHALLENGE_IMAGE_BASE = os.getenv("CHALLENGE_IMAGE_BASE", "ctf-challenge")
-CLEANUP_DURATION_MINUTES = int(os.getenv("CLEANUP_DURATION_MINUTES", 15))
-POLL_INTERVAL_SECONDS = int(os.getenv("POLL_INTERVAL_SECONDS", 10))
-CONTAINER_INTERNAL_PORT = int(os.getenv("CONTAINER_INTERNAL_PORT", 80))
-# Ensure this matches the network name used in docker-compose.yml
-NETWORK_NAME = os.getenv("NETWORK_NAME", "ctf_public")
+TABLE_CONTAINERS = "DockerContainers"   # watched table
+TABLE_CHALLENGES = "Challenges"         # has dockerChallengeID
+CHALLENGE_ROOT = Path("/var/www/CyberCity/dockerStuff")
 
-def get_db_connection():
-    """Establishes and returns a database connection."""
+BASE_PORT, MAX_PORT = 17001, 17999
+
+# --- HARD LIFETIME LIMIT (default 10 minutes) ---
+def _read_time_limit_minutes() -> int:
     try:
-        conn = mysql.connector.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS
-        )
-        return conn
-    except Error as e:
-        print(f"Error connecting to MySQL: {e}")
+        v = int(os.getenv("CYBER_DOCKER_TIME_LIMIT_MINUTES", "10"))
+        return max(1, v)  # clamp to >=1 minute
+    except Exception:
+        return 10
+
+TIME_LIMIT_MINUTES = _read_time_limit_minutes()
+
+active_containers = {}  # row_id -> {challengeID, dockerChallengeID, port, delete_time}
+TABLE_COLS = []         # detected order for DockerContainers columns
+CACHE = {}              # challengeID -> {"dockerChallengeID": str, "ts": float}
+CACHE_TTL = 300         # seconds
+
+def log(*a): print("[DB2Docker]", *a)
+
+# =========================
+# TIME HELPERS (UTC)
+# =========================
+def to_utc(dt):
+    """Treat MySQL datetimes as UTC and make them timezone-aware."""
+    if dt is None:
         return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
-def get_new_challenges(conn):
+def now_utc():
+    return datetime.now(timezone.utc)
+
+def compute_delete_time(time_initialised_utc: datetime):
     """
-    Retrieves rows from DockerContainers where the container has not yet been launched.
-    (We use 'timeInitialised IS NULL' as the launch flag).
+    Hard cap: timeInitialised + TIME_LIMIT_MINUTES.
+    No grace extension. No sliding window.
     """
-    cursor = conn.cursor(dictionary=True)
-    # Query: Selects the required fields including the new 'userID'. Launch flag is 'timeInitialised IS NULL'.
-    query = "SELECT id, challengeID, port, userID FROM DockerContainers WHERE timeInitialised IS NULL" 
-    cursor.execute(query)
-    challenges = cursor.fetchall()
-    cursor.close()
-    return challenges
+    return time_initialised_utc + timedelta(minutes=TIME_LIMIT_MINUTES)
 
-def update_challenge_status(conn, row_id):
-    """Updates the row after successful container launch, recording the initialization time only."""
-    cursor = conn.cursor()
-    # Updated: Only sets timeInitialised, as dockerIdentifier is no longer stored in the DB
-    query = "UPDATE DockerContainers SET timeInitialised = NOW() WHERE id = %s"
-    cursor.execute(query, (row_id,))
-    conn.commit()
-    cursor.close()
-
-def launch_container(docker_client, challenge_id, host_port, row_id, user_id, db_conn):
-    """Launches a new Docker container for the given challenge."""
-    image_name = f"{CHALLENGE_IMAGE_BASE}-{challenge_id}"
-    # Use the database row ID for guaranteed uniqueness in the container name
-    container_name = f"ctf-challenge-id-{row_id}-{challenge_id}" 
-
-    print(f"Attempting to launch container {container_name} from image {image_name} on port {host_port} for user {user_id}")
-
+# =========================
+# DB HELPERS
+# =========================
+def db_query(sql, params=None, fetch=True, commit=False):
+    conn = None
     try:
-        # Pull or verify the image is local
-        try:
-            docker_client.images.get(image_name)
-        except docker.errors.ImageNotFound:
-            print(f"Image {image_name} not found locally. Attempting to pull...")
-            docker_client.images.pull(image_name)
+        conn = pymysql.connect(**DB)
+        cur = conn.cursor()
+        cur.execute(sql, params or ())
+        if commit: conn.commit()
+        return cur.fetchall() if fetch else None
+    finally:
+        if conn: conn.close()
 
-        # Container Configuration
-        container = docker_client.containers.run(
-            image=image_name,
-            detach=True,
-            name=container_name,
-            # Map the dynamic host_port to the container's internal port
-            ports={f'{CONTAINER_INTERNAL_PORT}/tcp': host_port},
-            network=NETWORK_NAME,
-            # Use labels to link the running container back to the database record and user
-            labels={
-                "ctf.challenge.id": str(row_id),
-                "ctf.user.id": str(user_id)
-            },
-            environment={
-                "CHALLENGE_PORT": CONTAINER_INTERNAL_PORT,
-                "USER_ID": str(user_id)
-            }
+def load_cols():
+    """Detect column order for DockerContainers to map UNKNOWN_COLi from binlog."""
+    global TABLE_COLS
+    rows = db_query(f"SHOW COLUMNS FROM {TABLE_CONTAINERS}")
+    TABLE_COLS = [r[0] for r in rows]
+    log(f"Detected {TABLE_CONTAINERS} columns:", TABLE_COLS)
+
+def normalize_binlog_row(data: dict) -> dict:
+    """Map UNKNOWN_COLi keys to real column names based on table order."""
+    if not data: return {}
+    if all(k.startswith("UNKNOWN_COL") for k in data.keys()):
+        mapped = {}
+        for k, v in data.items():
+            m = re.search(r"(\d+)$", k)
+            if not m: continue
+            idx = int(m.group(1))
+            if idx < len(TABLE_COLS):
+                mapped[TABLE_COLS[idx]] = v
+        return mapped
+    return data
+
+# =========================
+# CHALLENGE LOOKUP (via Challenges table)
+# =========================
+def cache_get(challenge_id: str):
+    item = CACHE.get(challenge_id)
+    if not item: return None
+    if time.time() - item["ts"] > CACHE_TTL:
+        CACHE.pop(challenge_id, None)
+        return None
+    return item["dockerChallengeID"]
+
+def cache_put(challenge_id: str, docker_challenge_id: str):
+    CACHE[str(challenge_id)] = {"dockerChallengeID": docker_challenge_id, "ts": time.time()}
+
+def get_docker_challenge_id(challenge_id) -> str:
+    """Return dockerChallengeID string for a given Challenges.ID (cached)."""
+    if challenge_id is None: return None
+    key = str(challenge_id)
+    cached = cache_get(key)
+    if cached: return cached
+    row = db_query(f"SELECT dockerChallengeID FROM {TABLE_CHALLENGES} WHERE ID = %s", (challenge_id,))
+    if not row or not row[0][0]:
+        return None
+    dcid = str(row[0][0])
+    cache_put(key, dcid)
+    return dcid
+
+# =========================
+# PORT MGMT
+# =========================
+def get_next_available_port():
+    rows = db_query(f"SELECT port FROM {TABLE_CONTAINERS} WHERE port IS NOT NULL")
+    used = {r[0] for r in rows if r[0]}
+    for p in range(BASE_PORT, MAX_PORT + 1):
+        if p not in used:
+            return p
+    raise RuntimeError("No available ports in the specified range.")
+
+def update_port_in_db(row_id, port):
+    db_query(f"UPDATE {TABLE_CONTAINERS} SET port=%s WHERE ID=%s", (port, row_id), fetch=False, commit=True)
+    log(f"Port assigned: row {row_id} -> {port}")
+
+# =========================
+# FOLDER RESOLUTION
+# =========================
+def resolve_challenge_dir(docker_challenge_id: str) -> Path:
+    cdir = CHALLENGE_ROOT / str(docker_challenge_id)
+    if not cdir.is_dir():
+        raise FileNotFoundError(
+            f"Challenge folder not found for dockerChallengeID='{docker_challenge_id}' at {cdir}"
         )
+    return cdir
 
-        print(f"Successfully launched container {container.name} (ID: {container.short_id})")
-
-        # Update database with initialization time only
-        update_challenge_status(db_conn, row_id)
-        
-    except docker.errors.APIError as e:
-        print(f"Docker API error launching container {container_name}: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred during container launch: {e}")
-
-def cleanup_containers(docker_client, db_conn):
-    """
-    Stops and removes containers that have exceeded the CLEANUP_DURATION_MINUTES
-    by checking the DB timestamp linked via container labels.
-    """
-    
-    # 1. Identify all running challenge containers using a label filter
-    try:
-        # Filter containers by the label we apply during launch
-        running_challenges = docker_client.containers.list(filters={"label": "ctf.challenge.id"})
-        print (running_challenges)
-    except docker.errors.APIError as e:
-        print(f"Error listing running containers for cleanup: {e}")
+# =========================
+# DOCKER OPS
+# =========================
+def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
+    if not dockerChallengeID:
+        log(f"Row {row_id}: no dockerChallengeID for challengeID={challengeID}; skipping launch.")
         return
+    try:
+        cdir = resolve_challenge_dir(dockerChallengeID)
+    except FileNotFoundError as e:
+        log(str(e)); return
 
-    cleanup_count = 0
-    
-    for container in running_challenges:
-        # 2. Extract the DB row ID from the container label
-        row_id_str = container.labels.get("ctf.challenge.id")
-        
-        # This check should theoretically not fail if the filter worked, but serves as a safeguard
-        if not row_id_str:
-            print(f"Warning: Container {container.name} lacks ctf.challenge.id label. Skipping cleanup check.")
-            continue
-            
+    compose_file = cdir / "docker-compose.yml"
+    env_file     = cdir / ".env"
+
+    try:
+        cdir.mkdir(parents=True, exist_ok=True)
+        env_file.write_text(f"PORT={port}\nUSER={userID}\n")
+    except Exception as e:
+        log(f"Error writing .env in {cdir}: {e}"); return
+
+    if not compose_file.exists():
+        log(f"Compose file missing: {compose_file}"); return
+
+    log(f"Launching in {cdir}")
+    try:
+        subprocess.run(
+            ["sudo","docker","compose","-p",str(port),"-f",str(compose_file),"up","-d","--build"],
+            check=True, cwd=str(cdir)
+        )
+        log(f"Launched user {userID} ({dockerChallengeID}) on port {port}")
+    except subprocess.CalledProcessError as e:
+        log(f"Compose up failed (row {row_id}) in {cdir}: {e}")
+    except Exception as e:
+        log(f"Launch error (row {row_id}): {e}")
+
+def remove_container(userID, challengeID, dockerChallengeID, port, row_id):
+    # Best-effort: if not provided, look it up
+    if not dockerChallengeID:
+        dockerChallengeID = get_docker_challenge_id(challengeID)
+
+    if not dockerChallengeID:
+        log(f"Row {row_id}: cannot resolve dockerChallengeID for challengeID={challengeID}; DB-removing only.")
         try:
-            row_id = int(row_id_str)
-        except ValueError:
-            print(f"Warning: Invalid row ID in label for container {container.name}. Skipping.")
-            continue
-
-        # 3. Query DB for timeInitialised based on row ID
-        cursor = db_conn.cursor(dictionary=True)
-        query = "SELECT timeInitialised FROM DockerContainers WHERE id = %s"
-        cursor.execute(query, (row_id,))
-        record = cursor.fetchone()
-        cursor.close()
-
-        if not record or not record.get('timeInitialised'):
-            # DB record is missing or timestamp is null (e.g., failed launch or DB corruption)
-            print(f"DB record (ID: {row_id}) not found or missing timestamp. Force removing container {container.name} to clean up orphaned resource.")
-            try:
-                container.stop(timeout=5)
-                container.remove(v=True, force=True) 
-                if record:
-                    # If record exists but is NULL, also delete it
-                    cursor = db_conn.cursor()
-                    delete_query = "DELETE FROM DockerContainers WHERE id = %s"
-                    cursor.execute(delete_query, (row_id,))
-                    db_conn.commit()
-                    cursor.close()
-                cleanup_count += 1
-            except docker.errors.APIError as e:
-                 print(f"Error force removing orphaned container {container.name}: {e}")
-            continue
-
-        # Convert datetime object to a timezone-naive datetime for subtraction
-        time_initialised = record['timeInitialised']
-        if time_initialised.tzinfo is not None:
-             time_initialised = time_initialised.replace(tzinfo=None)
-        
-        # 4. Check time elapsed
-        time_elapsed = datetime.now() - time_initialised
-        cleanup_threshold = timedelta(minutes=CLEANUP_DURATION_MINUTES)
-        
-        if time_elapsed > cleanup_threshold:
-            print(f"Container {container.name} (DB ID: {row_id}) expired after {time_elapsed}. Initiating removal.")
-            
-            try:
-                # 5. Delete container and DB record
-                container.stop(timeout=5)
-                container.remove(v=True, force=True) 
-                
-                cursor = db_conn.cursor()
-                delete_query = "DELETE FROM DockerContainers WHERE id = %s"
-                cursor.execute(delete_query, (row_id,))
-                db_conn.commit()
-                cursor.close()
-                
-                cleanup_count += 1
-            
-            except docker.errors.APIError as e:
-                print(f"Docker API error during cleanup of {container.name}: {e}")
-            except Exception as e:
-                print(f"An unexpected error occurred during cleanup: {e}")
-
-    if cleanup_count > 0:
-        print(f"Cleaned up {cleanup_count} old challenge instances.")
-    else:
-        print("No containers requiring cleanup found.")
-
-def main_loop():
-    """The main loop for the container manager service."""
-    try:
-        # Uses the Docker socket to connect to the daemon
-        docker_client = docker.from_env()
-        print("Docker client initialized successfully.")
-    except Exception as e:
-        print(f"Could not initialize Docker client: {e}. Exiting.")
+            db_query(f"DELETE FROM {TABLE_CONTAINERS} WHERE ID=%s", (row_id,), fetch=False, commit=True)
+        except Exception as db_err: log(f"DB cleanup failed for row {row_id}: {db_err}")
         return
 
+    try:
+        cdir = resolve_challenge_dir(dockerChallengeID)
+    except FileNotFoundError as e:
+        log(str(e))
+        try: db_query(f"DELETE FROM {TABLE_CONTAINERS} WHERE ID=%s", (row_id,), fetch=False, commit=True)
+        except Exception as db_err: log(f"DB cleanup failed for row {row_id}: {db_err}")
+        return
+
+    compose_file = cdir / "docker-compose.yml"
+    log(f"Removing in {cdir} (port {port})")
+    try:
+        subprocess.run(
+            ["sudo","docker","compose","-p",str(port),"-f",str(compose_file),"down","--volumes","--remove-orphans"],
+            check=True, cwd=str(cdir)
+        )
+        active_containers.pop(row_id, None)
+        db_query(f"DELETE FROM {TABLE_CONTAINERS} WHERE ID=%s", (row_id,), fetch=False, commit=True)
+        log(f"Removed row {row_id} {dockerChallengeID} port {port}")
+    except subprocess.CalledProcessError as e:
+        log(f"Compose down failed (row {row_id}) in {cdir}: {e}")
+    except Exception as e:
+        log(f"Remove error (row {row_id}): {e}")
+
+# =========================
+# HOUSEKEEPER (JOIN reads dockerChallengeID)
+# =========================
+def time_tracker():
     while True:
-        db_conn = get_db_connection()
-        if db_conn:
-            try:
-                print("--- Starting Challenge Provisioning Cycle ---")
-                
-                # Task 1: Launch new containers
-                new_challenges = get_new_challenges(db_conn)
-                print(f"Found {len(new_challenges)} new challenges to provision.")
-                for challenge in new_challenges:
-                    # Pass the new 'userID' field to launch_container
-                    launch_container(
-                        docker_client, 
-                        challenge['challengeID'], 
-                        challenge['port'], 
-                        challenge['id'],
-                        challenge['userID'], 
-                        db_conn
-                    )
+        current_time = now_utc()
+        try:
+            sql = f"""
+            SELECT dc.ID, dc.timeInitialised, dc.userID, dc.challengeID, c.dockerChallengeID, dc.port
+            FROM {TABLE_CONTAINERS} dc
+            LEFT JOIN {TABLE_CHALLENGES} c ON c.ID = dc.challengeID
+            """
+            rows = db_query(sql)
 
-                # Task 2: Clean up old containers
-                print("--- Starting Cleanup Cycle ---")
-                cleanup_containers(docker_client, db_conn)
-                
-            except Error as e:
-                print(f"Database operation error during main loop: {e}")
-            finally:
-                db_conn.close()
-        else:
-            print("Failed to connect to database. Retrying...")
+            for (row_id, time_initialised, user_id, challenge_id, docker_challenge_id, port) in rows:
+                if not time_initialised or not port:
+                    continue
 
-        time.sleep(POLL_INTERVAL_SECONDS)
+                t0_utc = to_utc(time_initialised)
+                hard_deadline = compute_delete_time(t0_utc)
 
+                if current_time >= hard_deadline:
+                    log(f"expiry hit: row={row_id} deadline={hard_deadline.isoformat()}")
+                    remove_container(user_id, challenge_id, docker_challenge_id, port, row_id)
+
+        except Exception as e:
+            log(f"Error polling database for expired containers: {e}\n{traceback.format_exc()}")
+
+        time.sleep(15)
+
+# =========================
+# BINLOG PROCESSOR (per-row lookup, UTC times)
+# =========================
+def process_binlog_event():
+    stream = None
+    try:
+        stream = BinLogStreamReader(
+            connection_settings=BINLOG_CONN,
+            server_id=101,
+            only_events=[WriteRowsEvent, UpdateRowsEvent, DeleteRowsEvent],
+            blocking=True,
+            resume_stream=True
+        )
+        for be in stream:
+            if getattr(be, "table", None) != TABLE_CONTAINERS:
+                continue
+            for r in be.rows:
+                if isinstance(be, WriteRowsEvent):
+                    data, evt = r["values"], "INSERT"
+                elif isinstance(be, UpdateRowsEvent):
+                    data, evt = r["after_values"], "UPDATE"
+                else:
+                    data, evt = r["values"], "DELETE"
+
+                data = normalize_binlog_row(data)
+                log(f"Debug: Event={evt} Data={data}")
+
+                row_id       = data.get("ID")
+                time_init    = data.get("timeInitialised")
+                user_id      = data.get("userID")
+                challenge_id = data.get("challengeID")
+                port         = data.get("port")
+
+                if evt == "DELETE":
+                    info = active_containers.pop(row_id, None)
+                    docker_challenge_id = (info or {}).get("dockerChallengeID") or get_docker_challenge_id(challenge_id)
+                    if port is None and info: port = info.get("port")
+                    remove_container(user_id, challenge_id, docker_challenge_id, port, row_id)
+                    continue
+
+                if not time_init:
+                    log(f"Row {row_id} missing timeInitialised; skip.")
+                    continue
+
+                t0_utc = to_utc(time_init)
+                # compute hard deadline every time, but never allow extension beyond original cached one
+                computed_deadline = compute_delete_time(t0_utc)
+                cached = active_containers.get(row_id, {})
+                prior_deadline = cached.get("delete_time")
+                # hard cap: take the earliest deadline we know
+                delete_time = min(prior_deadline, computed_deadline) if prior_deadline else computed_deadline
+                docker_challenge_id = get_docker_challenge_id(challenge_id)
+
+                if evt == "INSERT":
+                    if not port:
+                        port = get_next_available_port()
+                        update_port_in_db(row_id, port)
+                    launch_container(user_id, challenge_id, docker_challenge_id, port, row_id)
+                    active_containers[row_id] = {
+                        "challengeID": challenge_id,
+                        "dockerChallengeID": docker_challenge_id,
+                        "port": port,
+                        "delete_time": delete_time
+                    }
+                elif evt == "UPDATE":
+                    # keep earliest deadline; do not extend
+                    if row_id in active_containers:
+                        ac = active_containers[row_id]
+                        ac["delete_time"] = min(ac.get("delete_time", delete_time), delete_time)
+                        ac["dockerChallengeID"] = docker_challenge_id or ac["dockerChallengeID"]
+                        if port: ac["port"] = port
+                    else:
+                        # if not tracked yet (process restarted), start tracking
+                        active_containers[row_id] = {
+                            "challengeID": challenge_id,
+                            "dockerChallengeID": docker_challenge_id,
+                            "port": port,
+                            "delete_time": delete_time
+                        }
+
+                # Opportunistic sweep (UTC)
+                now = now_utc()
+                for rid, info in list(active_containers.items()):
+                    if now >= info["delete_time"]:
+                        remove_container(user_id, info["challengeID"], info["dockerChallengeID"], info["port"], rid)
+
+    except KeyboardInterrupt:
+        log("Stopping binlog monitoring.")
+    except Exception as e:
+        log(f"Fatal binlog loop error: {e}\n{traceback.format_exc()}")
+    finally:
+        if stream: stream.close()
+
+# =========================
+# BOOT
+# =========================
 if __name__ == "__main__":
-    print("CTF Dynamic Container Manager starting...")
-    main_loop()
+    log(f"TIME_LIMIT_MINUTES = {TIME_LIMIT_MINUTES}")
+    load_cols()  # detect container table column order for binlog mapping
+    threading.Thread(target=time_tracker, daemon=True).start()
+    process_binlog_event()
