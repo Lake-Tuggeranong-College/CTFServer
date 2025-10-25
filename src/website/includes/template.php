@@ -105,8 +105,7 @@ $flash = take_flash();
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <!-- Bootstrap + CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="<?= BASE_URL; ?>assets/css/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/styles.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/moduleList.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/leaderboard.css">
@@ -277,9 +276,7 @@ $flash = take_flash();
 <!-- Your page content goes here -->
 
 <!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
+<script src="<?= BASE_URL; ?>assets/js/bootstrap/bootstrap.bundle.min.js"></script>
 
 <script>
     // Accessibility: Theme Mode Toggle
