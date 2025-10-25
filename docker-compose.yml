@@ -8,7 +8,11 @@ services:
     ports:
       - "8080:80"  # Accessible to other devices on the network
     volumes:
+      # For Debugging:
+      # - .:/var/www/html  # Mount PHP files from the current directory
+      # For Production:
       - ./src/:/var/www/html  # Mount PHP files from the current directory
+    restart: unless-stopped
     networks:
       - public
     depends_on:
@@ -27,7 +31,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init_scripts:/docker-entrypoint-initdb.d
-
+    command: --binlog-format=ROW --log-bin=mysql-bin --server-id=1
     ports:
       - "3306:3306"
 
