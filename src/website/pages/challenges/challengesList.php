@@ -35,10 +35,13 @@ function createChallengeCard(array $challengeData): void
     $imageFileName     = trim((string)($challengeData['Image'] ?? ''));
     $dockerChallengeId = $challengeData['dockerChallengeID'] ?? null;
 
-    // Build target link: docker variant if non-empty
-    $href = ($dockerChallengeId !== null && $dockerChallengeId !== '' && $dockerChallengeId !== 0)
-        ? "challengeDisplayDocker.php?challengeID={$challengeID}"
-        : "challengeDisplay.php?challengeID={$challengeID}";
+    // Build target link: NOW ALWAYS points to challengeDisplayUnified.php
+    $href = "challengeDisplayUnified.php?challengeID={$challengeID}";
+
+    // If it's a docker challenge, append the docker ID for the display page to use
+    if ($dockerChallengeId !== null && $dockerChallengeId !== '' && $dockerChallengeId !== 0) {
+        $href .= "&dockerID=" . urlencode($dockerChallengeId);
+    }
 
     // Pick image (fallback if missing)
     $imgSrc = $imageFileName !== ''
