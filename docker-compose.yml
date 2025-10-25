@@ -103,14 +103,13 @@ services:
       DB_NAME: CyberCity
       DB_USER: devuser
       DB_PASS: devpass
-      # Configuration for challenge image, e.g., 'challenge-base-image:latest'
-      # The manager logic will need to handle which exact image to use based on challengeID
       CHALLENGE_IMAGE_BASE: "challenge-base-image"
-      # Other necessary configuration like the duration for container cleanup (15 mins)
       CLEANUP_DURATION_MINUTES: 15
-    # Important: The manager needs access to the Docker daemon to start/stop containers
-      TZ: "Australia/Sydney" # Set your timezone
+      TZ: "Australia/Sydney"
     volumes:
+      # 1. BIND MOUNT: Syncs local changes in the app directory to the container
+      - ./container_manager_app:/home/manager
+      # 2. DOCKER SOCKET: Allows the manager to control the Docker host
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - public
