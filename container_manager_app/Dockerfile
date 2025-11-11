@@ -1,5 +1,6 @@
 # Use a slim Python image for efficiency
-FROM python:3.11-slim
+# FROM python:3.12-slim
+FROM python:3.12
 
 # Install dependencies needed for compiling C-extensions (like those used by some
 # database connectors) and the MySQL client libraries.
@@ -24,8 +25,15 @@ RUN pip install --no-cache-dir \
     git+https://github.com/noplay/python-mysql-replication.git
 
 # We can remove git and the build tools now to reduce image size
-RUN apt-get purge -y git gcc default-libmysqlclient-dev pkg-config && \
+# Update package lists, install docker.io and the docker-compose-plugin
+RUN apt-get update && \
+    apt-get install -y docker.io docker-compose && \
+    \
+    # Cleanup commands (as per your original request)
+    apt-get purge -y git gcc default-libmysqlclient-dev pkg-config && \
     apt-get autoremove -y && \
+    \
+    # Final cleanup of package lists
     rm -rf /var/lib/apt/lists/*
 
 # Copy the manager script (this is technically overridden by the bind mount in docker-compose, 
