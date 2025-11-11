@@ -259,10 +259,10 @@ def process_binlog_event():
                 sql = f"SELECT ID, challengeID, userID, port, timeInitialised FROM {TABLE_CONTAINERS}"
                 cursor.execute(sql)
                 for row in cursor.fetchall():
-                    row_id = row['ID'] 
+                    row_id = row['id'] 
                     time_init = row.get('timeInitialised')
                     port = row.get('port')
-                    
+                   
                     if time_init and port and row_id not in active_containers:
                         time_init_utc = time_init.replace(tzinfo=timezone.utc)
                         delete_time = time_init_utc + timedelta(minutes=TIME_LIMIT_MINUTES)
@@ -307,16 +307,16 @@ def process_binlog_event():
                                     pass
                             return val
 
-                        row_id              = get_val('ID')         
-                        challenge_id        = get_val('challengeID')
-                        user_id             = get_val('userID')
+                        row_id              = get_val('UNKNOWN_COL0')         
+                        challenge_id        = get_val('UNKNOWN_COL3')
+                        user_id             = get_val('UNKNOWN_COL2')
                         port                = get_val('port')
-                        time_initialised    = get_val('timeInitialised')
+                        time_initialised    = get_val('UNKNOWN_COL1')
 
                     except Exception as e:
                         log(f"BINLOG PARSE ERROR: Skipping row due to parsing issue: {e}")
                         continue
-                    
+                    print(row_data, row_id, challenge_id, user_id, port, time_initialised)
                     if not (row_id and challenge_id and user_id):
                         log(f"WARNING: Skipping row ID={row_id}, challengeID={challenge_id}, userID={user_id}. Missing critical data.")
                         continue
@@ -340,14 +340,31 @@ def process_binlog_event():
                                     "port": assigned_port,
                                     "delete_time": time_initialised.replace(tzinfo=timezone.utc) + timedelta(minutes=TIME_LIMIT_MINUTES)
                                 }
+                                log(f"Action: PREFILL CACHE for ID {row_id} (Port {assigned_port})")
+                            else:
+                                log(f"WARNING: timeInitialised is missing for ID {row_id}. Cannot prefill cache yet.")
                         else:
                             log(f"ERROR: No available ports for ID {row_id}.")
-                        
+                        time_init_utc = time_initialised.replace(tzinfo=timezone.utc)
+                        delete_time = time_init_utc + timedelta(minutes=TIME_LIMIT_MINUTES)
+                        active_containers[row_id] = {
+                            "challengeID": challenge_id,
+                            "userID": user_id,
+                            "port": port,
+                            "delete_time": delete_time
+                        }
+                        spawn_container(
+                            challenge_id=challenge_id,
+                            user_id=user_id,
+                            port=port
+                            )
+                        log("spawned")
                         continue
 
                     # CASE 2: Row has a valid port (UPDATE from Case 1 or direct INSERT)
+                    log(f"Processing existing port for ID {row_id}: Port {port}, TimeInitialised {time_initialised}, Tracked: {is_tracked}")
                     if port and time_initialised:
-                        
+                        log(f"Action: TRACK & SPAWN CHECK for ID {row_id} (Port {port})")
                         time_init_utc = time_initialised.replace(tzinfo=timezone.utc)
                         delete_time = time_init_utc + timedelta(minutes=TIME_LIMIT_MINUTES)
                         
@@ -358,7 +375,7 @@ def process_binlog_event():
                             "port": port,
                             "delete_time": delete_time
                         }
-                        
+
                         # 2b. DOCKER SPAWN: Only spawn if it was NOT tracked before (i.e., this event completed the data)
                         if not is_tracked:
                             log(f"Action: SPAWN DOCKER for ID {row_id} (Port {port})")
