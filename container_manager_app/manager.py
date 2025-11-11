@@ -200,7 +200,7 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
 
         # Use the old docker-compose binary
         subprocess.run(
-            shorthand_command,
+            long_form_command,
             check=True,  # Raises CalledProcessError on non-zero exit code
             cwd=str(cdir),
             capture_output=True,
