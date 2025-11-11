@@ -86,7 +86,7 @@ def get_challenge_image(challenge_id: int) -> str | None:
     try:
         with pymysql.connect(**DB) as conn:
             with conn.cursor() as cursor:
-                sql = f"SELECT Image FROM {TABLE_CHALLENGES} WHERE ID = %s"
+                sql = f"SELECT container FROM {TABLE_CHALLENGES} WHERE ID = %s"
                 cursor.execute(sql, (challenge_id,))
                 result = cursor.fetchone()
                 image = str(result[0]) if result and result[0] else None
