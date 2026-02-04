@@ -6,7 +6,7 @@ services:
     container_name: CTF-PHP
     image: php:8.2-apache
     ports:
-      - "8080:80"  # Accessible to other devices on the network
+      - "8000:80"  # Accessible to other devices on the network
     volumes:
       # For Debugging:
       # - .:/var/www/html  # Mount PHP files from the current directory
