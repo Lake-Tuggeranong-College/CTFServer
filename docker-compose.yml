@@ -14,7 +14,8 @@ services:
       - ./src/:/var/www/html  # Mount PHP files from the current directory
     restart: unless-stopped
     networks:
-      - public
+      - public   # To talk to the users
+      - private  # To talk to the database
     depends_on:
       - mysql
 
@@ -32,11 +33,10 @@ services:
       - mysql-data:/var/lib/mysql
       - ./init_scripts:/docker-entrypoint-initdb.d
     command: --binlog-format=ROW --log-bin=mysql-bin --server-id=1
-    ports:
-      - "3306:3306"
-
+    # ports:
+    #   - "3306:3306"
     networks:
-      - public
+      - private # The database is isolated here
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -50,7 +50,8 @@ services:
     depends_on:
       - mysql # Use the service name
     networks:
-      - public
+      - public   # So you can log in via your browser
+      - private  # To manage the database
 
   mosquitto:
     image: eclipse-mosquitto:latest 
@@ -64,7 +65,7 @@ services:
     environment:
       TZ: "Australia/Sydney" # Set your timezone
     networks:
-      - public # Ensure it's on the same network as db_publisher
+      - public # Devices need to connect to this from outside
 
   # Custom DB-to-MQTT Publisher
   db_publisher:
@@ -87,7 +88,8 @@ services:
     volumes:
       - db_publisher_data:/app
     networks:
-      - public
+      - public   # To talk to the MQTT Broker
+      - private  # To fetch data from MySQL
 
     
   container_manager:
@@ -113,6 +115,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - public
+      - private  # Needs to talk to MySQL
 
 
 volumes:
