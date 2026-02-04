@@ -170,7 +170,7 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
     except FileNotFoundError as e:
         log(str(e)); return
     # log(f"Resolved challenge dir: {cdir}")
-    compose_file = cdir / "docker-compose.yml"
+    compose_file = "docker-compose.yml"
     env_file     = cdir / ".env"
 
     try:
@@ -178,10 +178,11 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
         env_file.write_text(f"PORT={port}\nUSER={userID}\n")
     except Exception as e:
         log(f"Error writing .env in {cdir}: {e}"); return
-
-    if not compose_file.exists():
-        log(f"Compose file missing: {compose_file}"); return
-
+    compose_file_check = cdir / compose_file
+    if not compose_file_check.exists():
+        log(f"Compose file missing: {compose_file_check}"); return
+    if compose_file_check.exists():
+        log(f"Using compose file: {compose_file_check}")
     log(f"Launching in {cdir}")
     try:
 
@@ -209,6 +210,10 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
         log(f"Launched user {userID} ({dockerChallengeID}) on port {port}")
     except subprocess.CalledProcessError as e:
         log(f"Compose up failed (row {row_id}) in {cdir}: {e}")
+        log(f"--- COMMAND FAILED ---")
+        log(f"Error Code: {e.returncode}")  # This would show '14'
+        log(f"Command: {e.cmd}")
+        log(f"Actual Error Message: {e.stderr}") # This is the 'gold mine' of info
     except Exception as e:
         log(f"Launch error (row {row_id}): {e}")
 
