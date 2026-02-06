@@ -64,17 +64,17 @@ services:
     image: eclipse-mosquitto:latest 
     container_name: CTF-MQTT-Broker
     ports:
-      - "1883:1883" # MQTT standard port
+      - "1883:1883" 
     volumes:
+      # Keep config as a bind mount so you can edit it locally
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./mosquitto/config:/mosquitto/config
-      - ./mosquitto/data:/mosquitto/data  # mosquitto.db lives here
-      - ./mosquitto/log:/mosquitto/log    # mosquitto.log lives here
+      # Switch data and logs to named volumes (hidden from project folder)
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
     environment:
-      TZ: "Australia/Sydney" # Set your timezone
+      TZ: "Australia/Sydney"
     networks:
-      - public # Devices need to connect to this from outside
-
+      - public
   # Custom DB-to-MQTT Publisher
   db_publisher:
     build: 
@@ -130,6 +130,9 @@ services:
 volumes:
   mysql-data:
   db_publisher_data:
+  # Define the new named volumes here
+  mosquitto-data:
+  mosquitto-log:
 
 networks:
   public:
