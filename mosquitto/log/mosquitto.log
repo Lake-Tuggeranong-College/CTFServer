@@ -364,3 +364,130 @@
 1770207862: Client 140.82.114.21 closed its connection.
 1770207874: New connection from 140.82.114.21:16619 on port 1883.
 1770207874: Client 140.82.114.21 closed its connection.
+1770208908: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770210709: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770212511: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770214312: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770216113: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770217914: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770219715: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770221516: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770223317: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770225118: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770226919: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770228720: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770230521: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770232322: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770234123: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770235924: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770236784: Client auto-D27E1467-C3E9-FCAA-7474-D14CE275D1ED closed its connection.
+1770236784: mosquitto version 2.1.0 terminating
+1770236784: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770359454: mosquitto version 2.1.0 starting
+1770359454: Config loaded from /mosquitto/config/mosquitto.conf.
+1770359454: Bridge support available.
+1770359454: Persistence support available.
+1770359454: TLS support available.
+1770359454: TLS-PSK support available.
+1770359454: Websockets support available.
+1770359454: Opening ipv4 listen socket on port 1883.
+1770359454: Opening ipv6 listen socket on port 1883.
+1770359454: Opening ipv4 listen socket on port 9001.
+1770359454: Opening ipv6 listen socket on port 9001.
+1770359454: mosquitto version 2.1.0 running
+1770359455: New connection from 172.19.0.6:43745 on port 1883.
+1770359455: New client connected from 172.19.0.6:43745 as auto-9B2F137D-4FAC-CA3A-877C-12F17FE83658 (p4, c1, k60).
+1770361255: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770363056: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770364857: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770366658: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770368459: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770370260: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770371259: Client auto-9B2F137D-4FAC-CA3A-877C-12F17FE83658 closed its connection.
+1770371259: mosquitto version 2.1.0 terminating
+1770371259: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770372998: mosquitto version 2.1.0 starting
+1770372998: Config loaded from /mosquitto/config/mosquitto.conf.
+1770372998: Bridge support available.
+1770372998: Persistence support available.
+1770372998: TLS support available.
+1770372998: TLS-PSK support available.
+1770372998: Websockets support available.
+1770372998: Opening ipv4 listen socket on port 1883.
+1770372998: Opening ipv6 listen socket on port 1883.
+1770372998: Opening ipv4 listen socket on port 9001.
+1770372998: Opening ipv6 listen socket on port 9001.
+1770372998: mosquitto version 2.1.0 running
+1770372998: New connection from 172.19.0.6:53609 on port 1883.
+1770372998: New client connected from 172.19.0.6:53609 as auto-322CFEE4-F318-AFC2-2B6E-2632174BA12C (p4, c1, k60).
+1770373045: Client auto-322CFEE4-F318-AFC2-2B6E-2632174BA12C closed its connection.
+1770373045: mosquitto version 2.1.0 terminating
+1770373045: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770373293: mosquitto version 2.1.1 starting
+1770373293: Config loaded from /mosquitto/config/mosquitto.conf.
+1770373293: Bridge support available.
+1770373293: Persistence support available.
+1770373293: TLS support available.
+1770373293: TLS-PSK support available.
+1770373293: Websockets support available.
+1770373293: Opening ipv4 listen socket on port 1883.
+1770373293: Opening ipv6 listen socket on port 1883.
+1770373293: Opening ipv4 listen socket on port 9001.
+1770373293: Opening ipv6 listen socket on port 9001.
+1770373293: mosquitto version 2.1.1 running
+1770373294: New connection from 172.19.0.3:43269 on port 1883.
+1770373294: New client connected from 172.19.0.3:43269 as auto-EEE94ECF-ADBA-E43F-9C2B-10D2B3B8BBA6 (p4, c1, k60).
+1770374013: Client auto-EEE94ECF-ADBA-E43F-9C2B-10D2B3B8BBA6 [172.19.0.3:43269] disconnected: connection closed by client.
+1770374014: New connection from 172.19.0.3:59733 on port 1883.
+1770374014: New client connected from 172.19.0.3:59733 as auto-7A74B03D-663C-1ED2-A6CB-E33799196B9A (p4, c1, k60).
+1770374084: Client auto-7A74B03D-663C-1ED2-A6CB-E33799196B9A [172.19.0.3:59733] disconnected: connection closed by client.
+1770374084: mosquitto version 2.1.1 terminating
+1770374084: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770374094: mosquitto version 2.1.1 starting
+1770374094: Config loaded from /mosquitto/config/mosquitto.conf.
+1770374094: Bridge support available.
+1770374094: Persistence support available.
+1770374094: TLS support available.
+1770374094: TLS-PSK support available.
+1770374094: Websockets support available.
+1770374094: Opening ipv4 listen socket on port 1883.
+1770374094: Opening ipv6 listen socket on port 1883.
+1770374094: Opening ipv4 listen socket on port 9001.
+1770374094: Opening ipv6 listen socket on port 9001.
+1770374094: mosquitto version 2.1.1 running
+1770374094: New connection from 172.20.0.3:40225 on port 1883.
+1770374094: New client connected from 172.20.0.3:40225 as auto-5C68DDC1-FA54-F235-388A-9930C03ECFAD (p4, c1, k60).
+1770374562: Client auto-5C68DDC1-FA54-F235-388A-9930C03ECFAD [172.20.0.3:40225] disconnected: connection closed by client.
+1770374563: mosquitto version 2.1.1 terminating
+1770374563: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770374573: mosquitto version 2.1.1 starting
+1770374573: Config loaded from /mosquitto/config/mosquitto.conf.
+1770374573: Bridge support available.
+1770374573: Persistence support available.
+1770374573: TLS support available.
+1770374573: TLS-PSK support available.
+1770374573: Websockets support available.
+1770374573: Opening ipv4 listen socket on port 1883.
+1770374573: Opening ipv6 listen socket on port 1883.
+1770374573: Opening ipv4 listen socket on port 9001.
+1770374573: Opening ipv6 listen socket on port 9001.
+1770374573: mosquitto version 2.1.1 running
+1770374573: New connection from 172.20.0.5:40779 on port 1883.
+1770374573: New client connected from 172.20.0.5:40779 as auto-1CC39E26-7009-5F7F-FD91-0D4ED743C4B6 (p4, c1, k60).
+1770374704: Client auto-1CC39E26-7009-5F7F-FD91-0D4ED743C4B6 [172.20.0.5:40779] disconnected: connection closed by client.
+1770374704: mosquitto version 2.1.1 terminating
+1770374704: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770374824: mosquitto version 2.1.1 starting
+1770374824: Config loaded from /mosquitto/config/mosquitto.conf.
+1770374824: Bridge support available.
+1770374824: Persistence support available.
+1770374824: TLS support available.
+1770374824: TLS-PSK support available.
+1770374824: Websockets support available.
+1770374824: Opening ipv4 listen socket on port 1883.
+1770374824: Opening ipv6 listen socket on port 1883.
+1770374824: Opening ipv4 listen socket on port 9001.
+1770374824: Opening ipv6 listen socket on port 9001.
+1770374824: mosquitto version 2.1.1 running
+1770374824: New connection from 172.20.0.4:50101 on port 1883.
+1770374824: New client connected from 172.20.0.4:50101 as auto-BFA3AC15-D33A-7857-03FB-74F29D7F9AE5 (p4, c1, k60).
