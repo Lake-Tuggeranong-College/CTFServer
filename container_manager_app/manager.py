@@ -76,12 +76,32 @@ def db_query(sql, params=None, fetch=True, commit=False):
     conn = None
     try:
         conn = pymysql.connect(**DB)
-        cur = conn.cursor()
-        cur.execute(sql, params or ())
-        if commit: conn.commit()
-        return cur.fetchall() if fetch else None
+        with conn.cursor() as cur:
+            cur.execute(sql, params or ())
+            if commit: 
+                conn.commit()
+            return cur.fetchall() if fetch else None
+
+    except pymysql.OperationalError as e:
+        # Specifically handles connectivity, timeout, or server-down issues
+        log(f"Operational Error: {e.args[0]} - {e.args[1]}")
+        log("Check database connectivity or credentials.")
+        raise
+
+    except pymysql.InternalError as e:
+        # Handles logic errors like 'Table doesn't exist' or syntax errors
+        log(f"Internal Database Error: {e.args[0]} - {e.args[1]}")
+        log(f"Problematic Query: {sql}")
+        raise
+
+    except pymysql.MySQLError as e:
+        # Catch-all for other MySQL-related issues (Integrity errors, etc.)
+        log(f"General MySQL Error: {e}")
+        raise
+
     finally:
-        if conn: conn.close()
+        if conn:
+            conn.close()
 
 def load_cols():
     """Detect column order for DockerContainers to map UNKNOWN_COLi from binlog."""
