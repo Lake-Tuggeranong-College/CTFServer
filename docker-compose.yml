@@ -67,8 +67,9 @@ services:
       - "1883:1883" # MQTT standard port
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data  # mosquitto.db lives here
+      - ./mosquitto/log:/mosquitto/log    # mosquitto.log lives here
     environment:
       TZ: "Australia/Sydney" # Set your timezone
     networks:
