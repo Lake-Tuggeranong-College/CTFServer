@@ -491,3 +491,34 @@
 1770374824: mosquitto version 2.1.1 running
 1770374824: New connection from 172.20.0.4:50101 on port 1883.
 1770374824: New client connected from 172.20.0.4:50101 as auto-BFA3AC15-D33A-7857-03FB-74F29D7F9AE5 (p4, c1, k60).
+1770378007: mosquitto version 2.1.1 starting
+1770378007: Config loaded from /mosquitto/config/mosquitto.conf.
+1770378007: Bridge support available.
+1770378007: Persistence support available.
+1770378007: TLS support available.
+1770378007: TLS-PSK support available.
+1770378007: Websockets support available.
+1770378007: Starting in local only mode. Connections will only be possible from clients running on this machine.
+1770378007: Create a configuration file which defines a listener to allow remote access.
+1770378007: For more details see https://mosquitto.org/documentation/authentication-methods/
+1770378007: Opening ipv4 listen socket on port 1883.
+1770378007: Opening ipv6 listen socket on port 1883.
+1770378007: Opening http api listen socket on port 9883.
+1770378007: Using http_dir /usr/share/mosquitto/dashboard
+1770378007: mosquitto version 2.1.1 running
+1770378064: mosquitto version 2.1.1 terminating
+1770378064: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1770378160: mosquitto version 2.1.1 starting
+1770378160: Config loaded from /mosquitto/config/mosquitto.conf.
+1770378160: Bridge support available.
+1770378160: Persistence support available.
+1770378160: TLS support available.
+1770378160: TLS-PSK support available.
+1770378160: Websockets support available.
+1770378160: Opening ipv4 listen socket on port 1883.
+1770378160: Opening ipv6 listen socket on port 1883.
+1770378160: Opening ipv4 listen socket on port 9001.
+1770378160: Opening ipv6 listen socket on port 9001.
+1770378160: mosquitto version 2.1.1 running
+1770378160: New connection from 172.19.0.4:38119 on port 1883.
+1770378160: New client connected from 172.19.0.4:38119 as auto-7662A914-8FF6-823A-19B1-4CD44B9AD59D (p4, c1, k60).
