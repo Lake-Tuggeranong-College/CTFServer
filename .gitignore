@@ -5,3 +5,6 @@ mosquitto/data/
 mosquitto/log/
 *.db
 *.log
+# Ignore Mosquitto runtime files
+mosquitto/data/mosquitto.db
+mosquitto/log/mosquitto.log
