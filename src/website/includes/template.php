@@ -92,6 +92,7 @@ $flash = take_flash();
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -112,278 +113,237 @@ $flash = take_flash();
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/editAccount.css">
     <link rel="icon" type="image/png" href="<?= BASE_URL; ?>assets/img/CCLogo.png">
 </head>
+
 <body class="bg-light text-black">
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
-        <a class="navbar-brand">Cyber City</a>
+        <a href="<?= BASE_URL; ?>index.php" class="navbar-brand p-0 me-4">
+            <img src="<?= BASE_URL; ?>assets/img/logoGeneric.png" alt="Home" style="height: 50px; width: auto;">
+        </a>
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                aria-expanded="false" aria-label="Toggle navigation">
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <!-- Left -->
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item"><a href="<?= BASE_URL; ?>index.php" class="nav-link text-black"
-                                        style="padding-left: 2rem;">Home</a></li>
-                <li class="nav-item"><a href="<?= BASE_URL; ?>pages/leaderboard/leaderboard.php"
-                                        class="nav-link text-black">Leaderboard</a></li>
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center">
+                <li class="nav-item">
+                    <a href="<?= BASE_URL; ?>pages/leaderboard/leaderboard.php" class="nav-link text-black">Leaderboard</a>
+                </li>
+                
                 <li class="nav-item dropdown">
-                    <a class="nav-link text-black dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">
+                    <a class="nav-link text-black dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Project Version
                     </a>
-
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu shadow">
                         <?php
-                        // Database connection using PDO
                         try {
-                            // Query to get projects
                             $stmt = $conn->query("SELECT project_id, project_name FROM CyberCity.Projects");
-
-                            // Generate list items
                             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                 echo '<li><a class="dropdown-item" href="' . BASE_URL . 'pages/challenges/challengesList.php?projectID=' . $row['project_id'] . '">' . htmlspecialchars($row['project_name']) . '</a></li>';
                             }
                         } catch (PDOException $e) {
                             echo '<li><span class="dropdown-item text-danger">Error loading projects</span></li>';
-                            // Optionally log the error: error_log($e->getMessage());
                         }
                         ?>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li><a href="http://10.177.202.196/CyberCityDocs/welcome.html" class="nav-link text-black"
-                               target="_blank">Tutorials</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="http://10.177.202.196/CyberCityDocs/welcome.html" class="dropdown-item" target="_blank">Tutorials</a></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a href="https://forms.gle/jgYrmMZesgtVhBZ39" class="nav-link text-black"
-                                        target="_blank">Feedback</a></li>
 
-                <!-- Admin Panel -->
+                <li class="nav-item">
+                    <a href="https://forms.gle/jgYrmMZesgtVhBZ39" class="nav-link text-black" target="_blank">Feedback</a>
+                </li>
+
                 <?php if (isset($_SESSION['username']) && ($_SESSION['access_level'] ?? null) == ADMIN_ACCESS_LEVEL): ?>
-                <li class="nav-item dropdown">
-                    <a class="nav-link text-black dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                       aria-expanded="false">
-                        Admin Panel
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a href="<?= BASE_URL; ?>pages/admin/userList.php" class="dropdown-item">User
-                                List</a></li>
-
-                        <hr class="dropdown-divider">
-                </li>
-                <li><a href="<?= BASE_URL; ?>pages/admin/contactpage.php" class="dropdown-item">View Contact
-                        Requests</a></li>
-
-                <hr class="dropdown-divider">
-                </li>
-                <li><a href="<?= BASE_URL; ?>pages/admin/challengeRegister.php" class="dropdown-item">
-                        Create New Challenges</a></li>
-                <!--                <hr class="dropdown-divider">-->
-                <li><a href="<?= BASE_URL; ?>pages/admin/createCategory.php" class="dropdown-item">
-                        Create New Category</a></li>
-                <hr class="dropdown-divider">
-                <li><a href="<?= BASE_URL; ?>pages/admin/resetGame.php" class="dropdown-item">Reset Game</a>
-                </li>
-            </ul>
-            </li>
-            <?php endif; ?>
+                    <li class="nav-item dropdown border-start ps-lg-3">
+                        <a class="nav-link text-danger dropdown-toggle fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin Panel
+                        </a>
+                        <ul class="dropdown-menu shadow">
+                            <li><a href="<?= BASE_URL; ?>pages/admin/userList.php" class="dropdown-item">User List</a></li>
+                            <li><a href="<?= BASE_URL; ?>pages/admin/contactpage.php" class="dropdown-item">View Contact Requests</a></li>
+                            <li><a href="<?= BASE_URL; ?>pages/admin/challengeRegister.php" class="dropdown-item">Create New Challenges</a></li>
+                            <li><a href="<?= BASE_URL; ?>pages/admin/createCategory.php" class="dropdown-item">Create New Category</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a href="<?= BASE_URL; ?>pages/admin/resetGame.php" class="dropdown-item text-danger">Reset Game</a></li>
+                        </ul>
+                    </li>
+                <?php endif; ?>
             </ul>
 
-            <!-- Right -->
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center">
                 <li class="nav-item dropdown">
                     <a class="nav-link text-black dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Accessibility Features
+                        Accessibility
                     </a>
-                    <ul class="dropdown-menu p-3" style="min-width: 300px;">
-                        <li>
-                            <div>
-                                <h6>Fonts</h6>
+                    <ul class="dropdown-menu dropdown-menu-end p-3 shadow" style="min-width: 300px;">
+                        <li><h6 class="dropdown-header px-0">Fonts</h6>
+                            <div class="btn-group w-100">
                                 <button class="btn btn-sm btn-outline-primary accessibility-font" data-size="small">Small</button>
-                                <button class="btn btn-sm btn-outline-primary accessibility-font" data-size="medium">Medium</button>
+                                <button class="btn btn-sm btn-outline-primary accessibility-font" data-size="medium">Med</button>
                                 <button class="btn btn-sm btn-outline-primary accessibility-font" data-size="large">Large</button>
                             </div>
                         </li>
                         <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <div>
-                                <h6>Line Spacing</h6>
-                                <button class="btn btn-sm btn-outline-primary accessibility-line" data-spacing="1">Normal</button>
-                                <button class="btn btn-sm btn-outline-primary accessibility-line" data-spacing="1.5">1.5x</button>
-                                <button class="btn btn-sm btn-outline-primary accessibility-line" data-spacing="2">2x</button>
-                            </div>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <div>
-                                <h6>High Contrast Mode</h6>
-                                <button id="toggleContrast" class="btn btn-sm btn-outline-primary">Toggle High Contrast</button>
-                            </div>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <div>
-                                <h6>Theme Mode</h6>
-                                <button id="modeToggle" class="btn btn-sm btn-outline-primary">Switch to Dark Mode</button>
-                            </div>
+                        <li><h6 class="dropdown-header px-0">Theme</h6>
+                            <button id="modeToggle" class="btn btn-sm btn-outline-dark w-100 mb-2">Toggle Dark Mode</button>
+                            <button id="toggleContrast" class="btn btn-sm btn-outline-dark w-100">High Contrast</button>
                         </li>
                     </ul>
                 </li>
 
                 <?php if (isset($_SESSION['username'])): ?>
-                    <li class="nav-link dropdown">
-                        <a href="#" class="nav-link dropdown-toggle text-black" id="navbarDropdown"
-                           data-bs-toggle="dropdown" aria-expanded="false">
+                    <li class="nav-item dropdown px-lg-2">
+                        <a href="#" class="nav-link dropdown-toggle text-primary fw-bold" id="navbarDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <?= htmlspecialchars($_SESSION['username']); ?>
                         </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <li><a href="<?= BASE_URL; ?>pages/user/editAccount.php" class="dropdown-item">Edit
-                                    Account</a></li>
-                            <li><a class="dropdown-item">Score: <?= htmlspecialchars((string)$userScore); ?></a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow">
+                            <li><a href="<?= BASE_URL; ?>pages/user/editAccount.php" class="dropdown-item">Edit Account</a></li>
+                            <li><span class="dropdown-item-text text-muted">Score: <?= htmlspecialchars((string)$userScore); ?></span></li>
                         </ul>
                     </li>
-                    <li class="nav-link active"><a href="<?= BASE_URL; ?>pages/user/logout.php" class="nav-link"
-                                                   style="color:#000;">Logout</a></li>
-                    <?php if (($_SESSION['access_level'] ?? null) == USER_ACCESS_LEVEL): ?>
-                        <li class="nav-link active"><a href="<?= BASE_URL; ?>pages/contactUs/contact.php"
-                                                       class="nav-link text-white">Contact Us</a></li>
-                    <?php endif; ?>
+                    <li class="nav-item">
+                        <a href="<?= BASE_URL; ?>pages/user/logout.php" class="btn btn-outline-dark btn-sm ms-lg-2">Logout</a>
+                    </li>
                 <?php else: ?>
-                    <li class="nav-link active"><a href="<?= BASE_URL; ?>pages/user/register.php" class="nav-link"
-                                                   style="color:indianred;">Register</a></li>
-                    <li class="nav-link active"><a href="<?= BASE_URL; ?>pages/user/login.php"
-                                                   class="nav-link text-black">Login</a></li>
+                    <li class="nav-item">
+                        <a href="<?= BASE_URL; ?>pages/user/register.php" class="nav-link" style="color:indianred;">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="<?= BASE_URL; ?>pages/user/login.php" class="btn btn-primary btn-sm ms-lg-2">Login</a>
+                    </li>
                 <?php endif; ?>
             </ul>
         </div>
     </div>
 </nav>
 
-<!-- Flash -->
-<?php if ($flash): ?>
-    <?php
-    $type = preg_replace('/[^a-z]/', '', $flash['type']); // simple whitelist
-    $text = htmlspecialchars($flash['text'], ENT_QUOTES, 'UTF-8');
-    ?>
-    <div class="container mt-3">
-        <div class="alert alert-<?= $type ?> mb-3" role="alert"><?= $text ?></div>
-    </div>
-<?php endif; ?>
+    <!-- Flash -->
+    <?php if ($flash): ?>
+        <?php
+        $type = preg_replace('/[^a-z]/', '', $flash['type']); // simple whitelist
+        $text = htmlspecialchars($flash['text'], ENT_QUOTES, 'UTF-8');
+        ?>
+        <div class="container mt-3">
+            <div class="alert alert-<?= $type ?> mb-3" role="alert"><?= $text ?></div>
+        </div>
+    <?php endif; ?>
 
-<!-- Your page content goes here -->
+    <!-- Your page content goes here -->
 
-<!-- Bootstrap JS -->
-<script src="<?= BASE_URL; ?>assets/js/bootstrap/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="<?= BASE_URL; ?>assets/js/bootstrap/bootstrap.bundle.min.js"></script>
 
-<script>
-    // Accessibility: Theme Mode Toggle
-    const modeToggleBtn = document.getElementById('modeToggle');
-    const body = document.body;
+    <script>
+        // Accessibility: Theme Mode Toggle
+        const modeToggleBtn = document.getElementById('modeToggle');
+        const body = document.body;
 
-    function updateWideBoxClasses(theme) {
-        const wideBoxes = document.querySelectorAll(theme === 'light' ? '.wideBoxDark' : '.wideBox');
-        wideBoxes.forEach(box => {
-            box.classList.replace(theme === 'light' ? 'wideBoxDark' : 'wideBox',
-                theme === 'light' ? 'wideBox' : 'wideBoxDark');
+        function updateWideBoxClasses(theme) {
+            const wideBoxes = document.querySelectorAll(theme === 'light' ? '.wideBoxDark' : '.wideBox');
+            wideBoxes.forEach(box => {
+                box.classList.replace(theme === 'light' ? 'wideBoxDark' : 'wideBox',
+                    theme === 'light' ? 'wideBox' : 'wideBoxDark');
+            });
+        }
+
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('bg-dark', 'text-white');
+                body.classList.remove('bg-light', 'text-black');
+                updateWideBoxClasses('dark');
+                modeToggleBtn.textContent = 'Switch to Light Mode';
+            } else {
+                body.classList.add('bg-light', 'text-black');
+                body.classList.remove('bg-dark', 'text-white');
+                updateWideBoxClasses('light');
+                modeToggleBtn.textContent = 'Switch to Dark Mode';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // On page load, apply saved theme or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        modeToggleBtn.addEventListener('click', () => {
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
         });
-    }
+    </script>
 
-    function applyTheme(theme) {
-        if (theme === 'dark') {
-            body.classList.add('bg-dark', 'text-white');
-            body.classList.remove('bg-light', 'text-black');
-            updateWideBoxClasses('dark');
-            modeToggleBtn.textContent = 'Switch to Light Mode';
-        } else {
-            body.classList.add('bg-light', 'text-black');
-            body.classList.remove('bg-dark', 'text-white');
-            updateWideBoxClasses('light');
-            modeToggleBtn.textContent = 'Switch to Dark Mode';
-        }
-        localStorage.setItem('theme', theme);
-    }
+    <script>
+        // Load saved preferences or set defaults for accessibility features
+        const savedFont = localStorage.getItem('accessibilityFont') || 'medium';
+        const savedLineSpacing = localStorage.getItem('accessibilityLineSpacing') || '1';
+        const savedContrast = localStorage.getItem('accessibilityContrast') === 'true';
 
-    // On page load, apply saved theme or default to light
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    applyTheme(savedTheme);
+        function applyAccessibilitySettings() {
+            document.body.classList.remove('font-small', 'font-medium', 'font-large');
+            document.body.classList.add('font-' + savedFont);
 
-    modeToggleBtn.addEventListener('click', () => {
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        applyTheme(newTheme);
-    });
-</script>
+            document.body.classList.remove('line-spacing-1', 'line-spacing-1-5', 'line-spacing-2');
+            if (savedLineSpacing === '1') {
+                document.body.classList.add('line-spacing-1');
+            } else if (savedLineSpacing === '1.5') {
+                document.body.classList.add('line-spacing-1-5');
+            } else if (savedLineSpacing === '2') {
+                document.body.classList.add('line-spacing-2');
+            }
 
-<script>
-    // Load saved preferences or set defaults for accessibility features
-    const savedFont = localStorage.getItem('accessibilityFont') || 'medium';
-    const savedLineSpacing = localStorage.getItem('accessibilityLineSpacing') || '1';
-    const savedContrast = localStorage.getItem('accessibilityContrast') === 'true';
-
-    function applyAccessibilitySettings() {
-        document.body.classList.remove('font-small', 'font-medium', 'font-large');
-        document.body.classList.add('font-' + savedFont);
-
-        document.body.classList.remove('line-spacing-1', 'line-spacing-1-5', 'line-spacing-2');
-        if (savedLineSpacing === '1') {
-            document.body.classList.add('line-spacing-1');
-        } else if (savedLineSpacing === '1.5') {
-            document.body.classList.add('line-spacing-1-5');
-        } else if (savedLineSpacing === '2') {
-            document.body.classList.add('line-spacing-2');
+            if (savedContrast) {
+                document.body.classList.add('high-contrast');
+            } else {
+                document.body.classList.remove('high-contrast');
+            }
         }
 
+        applyAccessibilitySettings();
+
+        // Highlight active buttons
+        document.querySelectorAll('.accessibility-font').forEach(button => {
+            if (button.getAttribute('data-size') === savedFont) {
+                button.classList.add('active');
+            }
+        });
+        document.querySelectorAll('.accessibility-line').forEach(button => {
+            if (button.getAttribute('data-spacing') === savedLineSpacing) {
+                button.classList.add('active');
+            }
+        });
         if (savedContrast) {
-            document.body.classList.add('high-contrast');
-        } else {
-            document.body.classList.remove('high-contrast');
+            document.getElementById('toggleContrast').classList.add('active');
         }
-    }
 
-    applyAccessibilitySettings();
-
-    // Highlight active buttons
-    document.querySelectorAll('.accessibility-font').forEach(button => {
-        if (button.getAttribute('data-size') === savedFont) {
-            button.classList.add('active');
-        }
-    });
-    document.querySelectorAll('.accessibility-line').forEach(button => {
-        if (button.getAttribute('data-spacing') === savedLineSpacing) {
-            button.classList.add('active');
-        }
-    });
-    if (savedContrast) {
-        document.getElementById('toggleContrast').classList.add('active');
-    }
-
-    // Font size buttons
-    document.querySelectorAll('.accessibility-font').forEach(button => {
-        button.addEventListener('click', () => {
-            const size = button.getAttribute('data-size');
-            localStorage.setItem('accessibilityFont', size);
-            location.reload(); // reload to apply changes cleanly
+        // Font size buttons
+        document.querySelectorAll('.accessibility-font').forEach(button => {
+            button.addEventListener('click', () => {
+                const size = button.getAttribute('data-size');
+                localStorage.setItem('accessibilityFont', size);
+                location.reload(); // reload to apply changes cleanly
+            });
         });
-    });
 
-    // Line spacing buttons
-    document.querySelectorAll('.accessibility-line').forEach(button => {
-        button.addEventListener('click', () => {
-            const spacing = button.getAttribute('data-spacing');
-            localStorage.setItem('accessibilityLineSpacing', spacing);
+        // Line spacing buttons
+        document.querySelectorAll('.accessibility-line').forEach(button => {
+            button.addEventListener('click', () => {
+                const spacing = button.getAttribute('data-spacing');
+                localStorage.setItem('accessibilityLineSpacing', spacing);
+                location.reload();
+            });
+        });
+
+        // High contrast toggle
+        document.getElementById('toggleContrast').addEventListener('click', () => {
+            const current = localStorage.getItem('accessibilityContrast') === 'true';
+            localStorage.setItem('accessibilityContrast', !current);
             location.reload();
         });
-    });
-
-    // High contrast toggle
-    document.getElementById('toggleContrast').addEventListener('click', () => {
-        const current = localStorage.getItem('accessibilityContrast') === 'true';
-        localStorage.setItem('accessibilityContrast', !current);
-        location.reload();
-    });
-</script>
+    </script>
 </body>
+
 </html>
