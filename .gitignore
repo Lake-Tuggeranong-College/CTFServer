@@ -1,4 +1,7 @@
 # MacOS files
 **/.DS_Store
-mosquitto/data/mosquitto.db
-mosquitto/log/mosquitto.log
+# Ignore Mosquitto runtime data
+mosquitto/data/
+mosquitto/log/
+*.db
+*.log
