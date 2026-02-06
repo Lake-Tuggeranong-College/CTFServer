@@ -23,8 +23,8 @@
                     </div>
                     <p class="lead">Unauthorized identity detected. Please authenticate to join the cause.</p>
                     <div class="d-flex gap-2 mt-3">
-                        <a href="login.php" class="btn btn-primary btn-lg px-4 shadow-sm">Log In</a>
-                        <a href="register.php" class="btn btn-outline-secondary btn-lg px-4">Register</a>
+                        <a href="pages/user/login.php" class="btn btn-primary btn-lg px-4 shadow-sm">Log In</a>
+                        <a href="pages/user/register.php" class="btn btn-outline-secondary btn-lg px-4">Register</a>
                     </div>
                 <?php endif; ?>
             </div>
