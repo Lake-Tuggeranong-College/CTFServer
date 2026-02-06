@@ -37,6 +37,13 @@ services:
     #   - "3306:3306"
     networks:
       - private # The database is isolated here
+    healthcheck:
+      # Command to check if the database is accepting connections
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s # Gives the DB time to initialize before starting checks
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
@@ -99,7 +106,8 @@ services:
     container_name: CTF-ContainerManager
     restart: unless-stopped
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy # This is the critical change
     environment:
       DB_HOST: CTF-MySQL
       DB_NAME: CyberCity
