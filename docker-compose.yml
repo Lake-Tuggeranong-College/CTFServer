@@ -126,6 +126,20 @@ services:
       - public
       - private  # Needs to talk to MySQL
 
+  docs:
+    image: node:current-slim
+    container_name: CTF-Docs
+    working_dir: /app
+    ports:
+      - "8001:3000"
+    volumes:
+      - ./docs:/app
+    # This script checks for index.html. If it's missing, it writes the 
+    # boilerplate code directly so docsify-cli has something to serve.
+    command: >
+      sh -c "npm install -g docsify-cli && 
+             node setup.js && 
+             docsify serve ."
 
 volumes:
   mysql-data:
