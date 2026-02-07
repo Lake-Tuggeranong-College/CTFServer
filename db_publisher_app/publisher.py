@@ -20,9 +20,9 @@ logger = logging.getLogger(__name__)
 
 # --- Configuration (Defaults from docker-compose.yml) ---
 DB_HOST = os.getenv("DB_HOST", "CTF-MySQL") 
-DB_NAME = os.getenv("DB_NAME", "devdb")
-DB_USER = os.getenv("DB_USER", "devuser")
-DB_PASS = os.getenv("DB_PASS", "devpass")
+DB_NAME = os.getenv("DB_NAME", "CyberCity")
+DB_USER = os.getenv("DB_USER", "CyberCity")
+DB_PASS = os.getenv("DB_PASS", "Cyb3rC1ty")
 MQTT_HOST = os.getenv("MQTT_HOST", "CTF-MQTT-Broker")
 MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", 5))

@@ -17,7 +17,7 @@ import re
 # =========================
 # CONFIG
 # =========================
-DB = {'host':'CTF-MySQL','user':'devuser','passwd':'devpass','port':3306,'db':'CyberCity'}
+DB = {'host':'CTF-MySQL','user':'CyberCity','passwd':'Cyb3rC1ty','port':3306,'db':'CyberCity'}
 BINLOG_CONN = {'host':DB['host'],'port':DB['port'],'user':DB['user'],'passwd':DB['passwd']}
 
 TABLE_CONTAINERS = "DockerContainers"   # watched table
