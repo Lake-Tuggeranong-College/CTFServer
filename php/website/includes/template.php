@@ -61,6 +61,26 @@ function authorisedAccess(bool $allow_unauth, bool $allow_user, bool $allow_admi
     return true;
 }
 
+
+/**
+ * Redirects reliably even if headers have already been sent.
+ */
+function smart_redirect($url) {
+    if (!headers_sent()) {
+        header("Location: " . $url);
+        exit;
+    } else {
+        echo '<script type="text/javascript">';
+        echo 'window.location.href="' . $url . '";';
+        echo '</script>';
+        echo '<noscript>';
+        echo '<meta http-equiv="refresh" content="0;url=' . $url . '" />';
+        echo '</noscript>';
+        exit;
+    }
+}
+
+
 /* ---------------------- Page guard ---------------------- */
 /*
    Choose one for this page:
@@ -130,9 +150,6 @@ $flash = take_flash();
         <div class="collapse navbar-collapse" id="mainNavbar">
             
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 align-items-center">
-                <li class="nav-item">
-                    <a href="<?= BASE_URL; ?>pages/leaderboard/leaderboard.php" class="nav-link px-3 text-dark fw-medium">Leaderboard</a>
-                </li>
                 
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle px-3 text-dark fw-medium" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -153,6 +170,14 @@ $flash = take_flash();
                         <li><a href="http://10.177.202.196/CyberCityDocs/welcome.html" class="dropdown-item" target="_blank">Tutorials</a></li>
                     </ul>
                 </li>
+
+                <li class="nav-item">
+                    <a href="<?= BASE_URL; ?>pages/leaderboard/leaderboard.php" class="nav-link px-3 text-dark fw-medium">Leaderboard</a>
+                </li>
+
+                 <li class="nav-item">
+<a href="//<?= $_SERVER['SERVER_NAME'] ?>:8001" class="nav-link px-3 text-dark fw-medium" target="_blank">Documentation</a>                </li>
+                
 
                 <li class="nav-item">
                     <a href="https://forms.gle/jgYrmMZesgtVhBZ39" class="nav-link px-3 text-dark fw-medium" target="_blank">Feedback</a>

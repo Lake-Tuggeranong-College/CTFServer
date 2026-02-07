@@ -1,8 +1,11 @@
 <?php
+ob_start();
 include_once "../../includes/template.php";
 
-if (authorisedAccess(true, false, false)) {
-    echo '<script type="text/javascript">location.replace("http://10.177.200.71/CyberCity/index.php")</script>';
+/** @var $conn */
+if (!authorisedAccess(false, false, true)) {
+    header("Location:../../index.php");
+    exit;
 }
 // Fetch the user's current data from the database
 $userId = $_SESSION['user_id'];
@@ -74,3 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </div>
 </div>
+
+<?php
+// Flush the output buffer and turn off buffering
+ob_end_flush();
+?>

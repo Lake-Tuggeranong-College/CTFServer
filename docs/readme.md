@@ -1,4 +1,4 @@
-# 🚩 Cyber City CTF Documentation
+# Cyber City CTF Documentation
 
 
 Welcome to the Cyber City CTF documentation! This documentation provides comprehensive information about the Cyber City Capture The Flag (CTF) event, including details about the challenges, setup instructions, and technical manuals.
@@ -160,8 +160,8 @@ def hello_world():
 
 **Result:**
 
-| Header 1 | Header 2 | Header 3  |     |
-| -------- | -------- | --------- | --- |
-| Row 1    | Data     | More data |     |
-| Row 2    | Data     | More data |     |
+| Header 1 | Header 2 | Header 3  | 
+| -------- | -------- | --------- | 
+| Row 1    | Data     | More data | 
+| Row 2    | Data     | More data | 
 

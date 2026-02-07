@@ -1,6 +1,6 @@
 <?php
     // Base-line redirect URL so the SSH doesn't get flipping confused af
-    const BASE_URL = '/website/';
+    const BASE_URL = '/';
 
 
 

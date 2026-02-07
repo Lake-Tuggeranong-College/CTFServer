@@ -11,7 +11,7 @@ services:
       # For Debugging:
       # - .:/var/www/html  # Mount PHP files from the current directory
       # For Production:
-      - ./src/:/var/www/html  # Mount PHP files from the current directory
+      - ./php/website/:/var/www/html  # Mount PHP files from the current directory
     restart: unless-stopped
     networks:
       - public   # To talk to the users
