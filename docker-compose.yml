@@ -1,9 +1,9 @@
 services:
-  php:
+  php-webserver:
     build:
       context: .
       dockerfile: ./php/Dockerfile
-    container_name: CTF-PHP
+    container_name: CTF-PHPWebserver
     image: php:8.2-apache
     ports:
       - "8000:80"  # Accessible to other devices on the network
@@ -25,10 +25,10 @@ services:
     container_name: CTF-MySQL
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: CTFRootPassw0rd
       MYSQL_DATABASE: CyberCity
-      MYSQL_USER: devuser
-      MYSQL_PASSWORD: devpass
+      MYSQL_USER: CyberCity
+      MYSQL_PASSWORD: Cyb3rC1ty
     volumes:
       - mysql-data:/var/lib/mysql
       - ./init_scripts:/docker-entrypoint-initdb.d
@@ -50,7 +50,7 @@ services:
     container_name: CTF-PHPMyAdmin
     environment:
       PMA_HOST: mysql # Link to the MariaDB container service name
-      MYSQL_ROOT_PASSWORD: rootpassword # Use the same root password as MariaDB
+      MYSQL_ROOT_PASSWORD: CTFRootPassw0rd # Use the same root password as MariaDB
       PMA_PORT: 3306 # MariaDB's internal port
     ports:
       - "8081:80" # Expose phpMyAdmin on host port 8081
@@ -88,8 +88,8 @@ services:
     environment:
       DB_HOST: CTF-MySQL
       DB_NAME: CyberCity
-      DB_USER: devuser
-      DB_PASS: devpass
+      DB_USER: CyberCity
+      DB_PASS: Cyb3rC1ty
       MQTT_HOST: CTF-MQTT-Broker
       MQTT_PORT: 1883
       POLL_INTERVAL_SECONDS: 5
@@ -112,8 +112,8 @@ services:
     environment:
       DB_HOST: CTF-MySQL
       DB_NAME: CyberCity
-      DB_USER: devuser
-      DB_PASS: devpass
+      DB_USER: CyberCity
+      DB_PASS: Cyb3rC1ty
       CHALLENGE_IMAGE_BASE: "challenge-base-image"
       CLEANUP_DURATION_MINUTES: 15
       TZ: "Australia/Sydney"

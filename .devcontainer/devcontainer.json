@@ -3,7 +3,7 @@
     "dockerComposeFile": [
         "../docker-compose.yml"
     ],
-    "service": "php",
+    "service": "php-webserver",
     "workspaceFolder": "/var/www/html",
     "shutdownAction": "stopCompose",
     "customizations": {
