@@ -112,11 +112,11 @@ Use numbers followed by periods:
 ![Alt text](https://via.placeholder.com/150x100 "Optional title")
 ![Alt text][image-reference]
 
-[image-reference]: https://via.placeholder.com/150x100
+![Cyber City CTF Logo](./images/logoGeneric.png)
 ```
 
 **Result:**
-![Alt text](https://via.placeholder.com/150x100 "Optional title")
+![Cyber City CTF Logo](./images/logoGeneric.png)
 
 
 ### Code
