@@ -31,24 +31,50 @@ TRACKING_FILE = "/app/published_modules.json"
 msg_queue = queue.Queue()
 
 # --- Database Functions ---
+
 def log_event_to_db(event_text, username="esp32"):
-    """Logs an entry into the eventLog table."""
+    """Logs an entry into the eventLog table with a timestamp."""
     try:
         conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor()
-       
-        # Get current datetime for the new column
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Updated query to include datePosted
         query = "INSERT INTO eventLog (username, eventText, datePosted) VALUES (%s, %s, %s);"
         cur.execute(query, (username, event_text, current_time))
         conn.commit()
-        logger.info(f"Event logged: {event_text}")
+        logger.info(f"Event logged to eventLog: {event_text}")
         cur.close()
         conn.close()
     except Exception as e:
         logger.error(f"Failed to log event: {e}")
+
+def log_module_data_to_db(module_name, data_text):
+    """
+    Finds ModuleID from Challenges table and logs data to ModuleData table.
+    """
+    try:
+        conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+        cur = conn.cursor(dictionary=True)
+        
+        # 1. Find the ID for this module name
+        cur.execute("SELECT ID FROM Challenges WHERE moduleName = %s LIMIT 1;", (module_name,))
+        result = cur.fetchone()
+        logger.info(f"Module Data ID: {result['ID']})
+        if result:
+            module_id = result['ID']
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # 2. Insert into ModuleData
+            insert_query = "INSERT INTO ModuleData (ModuleID, DateTime, Data) VALUES (%s, %s, %s);"
+            cur.execute(insert_query, (module_id, current_time, data_text))
+            conn.commit()
+            logger.info(f"ModuleData logged: ModuleID {module_id}, Data: {data_text}")
+        else:
+            logger.warning(f"Could not log ModuleData: No module found named '{module_name}'")
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to log ModuleData: {e}")
 
 def update_database_from_mqtt(module_name, new_value):
     """Updates Challenges table. Returns True if match found."""
@@ -67,35 +93,57 @@ def update_database_from_mqtt(module_name, new_value):
     return updated
 
 # --- Mosquitto Client Setup ---
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         logger.info("Connected to MQTT broker successfully.")
-        # Subscribing with a slightly higher QoS to ensure delivery
+        # Subscribe to both the prefixed topics and the top-level special topics
         client.subscribe(f"{TOPIC_PREFIX}#", qos=1)
-        logger.info(f"Subscribed to {TOPIC_PREFIX}#")
+        client.subscribe("EventLog", qos=1)
+        client.subscribe("ModuleData", qos=1)
+        logger.info("Subscribed to challenges/#, EventLog, and ModuleData")
     else:
         logger.error(f"Connection failed with code {rc}")
 
 def on_message(client, userdata, msg):
-    """Callback triggered on message arrival. We move processing to a queue."""
+    """Callback triggered on message arrival."""
     try:
+        if msg.retain:
+            logger.debug(f"Ignoring retained message on {msg.topic}")
+            return
+
         payload = msg.payload.decode('utf-8')
-        logger.debug(f"Raw message received on {msg.topic}")
-        # Put the message in the queue so the main loop can process it
+        logger.debug(f"Live message received on {msg.topic}")
         msg_queue.put((msg.topic, payload))
     except Exception as e:
         logger.error(f"Error in on_message callback: {e}")
 
 def process_incoming_messages():
-    """Processes all messages currently in the queue."""
+    """Processes messages based on topic logic."""
     while not msg_queue.empty():
         topic, payload = msg_queue.get()
-        if topic.startswith(TOPIC_PREFIX):
-            module_name = topic[len(TOPIC_PREFIX):]
-            success = update_database_from_mqtt(module_name, payload)
+        
+        # 1. Handle Top-Level special topics (No prefix)
+        if topic == "EventLog":
+            log_event_to_db(payload)
+        
+        elif topic == "ModuleData":
+            if "," in payload:
+                m_name, m_data = payload.split(",", 1)
+                log_module_data_to_db(m_name.strip(), m_data.strip())
+            else:
+                logger.debug(f"ModuleData received with invalid format: {payload}")
+        
+        # 2. Handle Prefixed Challenge topics
+        elif topic.startswith(TOPIC_PREFIX):
+            sub_topic = topic[len(TOPIC_PREFIX):]
+            logger.debug(f"Handling challenge sub_topic: {sub_topic}")
+            
+            # Standard challenge update for non-retained messages
+            success = update_database_from_mqtt(sub_topic, payload)
             if not success:
-                log_text = f"Unmatched topic '{topic}' with payload: {payload}"
-                log_event_to_db(log_text)
+                logger.debug(f"Ignoring message on unmatched challenge topic: {topic}")
+                    
         msg_queue.task_done()
 
 # Initialize MQTT Client
@@ -106,6 +154,7 @@ mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
 # --- Topic Tracking & DB Polling ---
+
 def load_previous_modules():
     if os.path.exists(TRACKING_FILE):
         with open(TRACKING_FILE, 'r') as f:
@@ -144,14 +193,9 @@ def read_and_publish_data():
     save_current_modules(current_module_names)
 
 if __name__ == "__main__":
-    logger.info("Service starting...")
+    logger.info("Service starting with Strict Routing and No-Prefix Special Topics...")
     time.sleep(5) 
     while True:
-        # 1. Process any messages received from ESP32 since last loop
         process_incoming_messages()
-        
-        # 2. Poll DB and publish to ESP32
         read_and_publish_data()
-        
-        # 3. Short sleep to prevent CPU hogging while allowing MQTT threads to work
         time.sleep(POLL_INTERVAL)
