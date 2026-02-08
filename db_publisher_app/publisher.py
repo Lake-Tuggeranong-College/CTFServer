@@ -25,6 +25,7 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", 5))
 
 TOPIC_PREFIX = "challenges/" 
+UPDATE_PREFIX = "updateChallenges/"
 TRACKING_FILE = "/app/published_modules.json"
 
 # Thread-safe queue to store incoming MQTT messages
@@ -54,11 +55,11 @@ def log_module_data_to_db(module_name, data_text):
     try:
         conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor(dictionary=True)
-        logger.debug(f"Attempting to log ModuleData for module '{module_name}' with data: {data_text}") 
-
+        
         # 1. Find the ID for this module name
         cur.execute("SELECT ID FROM Challenges WHERE moduleName = %s LIMIT 1;", (module_name,))
         result = cur.fetchone()
+        
         if result:
             module_id = result['ID']
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -97,11 +98,12 @@ def update_database_from_mqtt(module_name, new_value):
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         logger.info("Connected to MQTT broker successfully.")
-        # Subscribe to both the prefixed topics and the top-level special topics
+        # Subscribe to prefixed topics and top-level special topics
         client.subscribe(f"{TOPIC_PREFIX}#", qos=1)
+        client.subscribe(f"{UPDATE_PREFIX}#", qos=1) # New subscription for updates
         client.subscribe("EventLog", qos=1)
         client.subscribe("ModuleData", qos=1)
-        logger.info("Subscribed to challenges/#, EventLog, and ModuleData")
+        logger.info(f"Subscribed to {TOPIC_PREFIX}#, {UPDATE_PREFIX}#, EventLog, and ModuleData")
     else:
         logger.error(f"Connection failed with code {rc}")
 
@@ -113,7 +115,7 @@ def on_message(client, userdata, msg):
             return
 
         payload = msg.payload.decode('utf-8')
-        # logger.debug(f"Live message received on {msg.topic}")
+        logger.debug(f"Live message received on {msg.topic}")
         msg_queue.put((msg.topic, payload))
     except Exception as e:
         logger.error(f"Error in on_message callback: {e}")
@@ -134,15 +136,13 @@ def process_incoming_messages():
             else:
                 logger.debug(f"ModuleData received with invalid format: {payload}")
         
-        # 2. Handle Prefixed Challenge topics
-        elif topic.startswith(TOPIC_PREFIX):
-            sub_topic = topic[len(TOPIC_PREFIX):]
-            logger.debug(f"Handling challenge sub_topic: {sub_topic}")
-            
-            # Standard challenge update for non-retained messages
+        # 2. Handle updateChallenges/ prefix (Updates moduleValue)
+        elif topic.startswith(UPDATE_PREFIX):
+            sub_topic = topic[len(UPDATE_PREFIX):]
+            logger.info(f"Update request for module '{sub_topic}' with value: {payload}")
             success = update_database_from_mqtt(sub_topic, payload)
             if not success:
-                logger.debug(f"Ignoring message on unmatched challenge topic: {topic}")
+                logger.warning(f"Failed to update challenge: Module '{sub_topic}' not found.")
                     
         msg_queue.task_done()
 
@@ -193,7 +193,7 @@ def read_and_publish_data():
     save_current_modules(current_module_names)
 
 if __name__ == "__main__":
-    logger.info("Service starting with Strict Routing and No-Prefix Special Topics...")
+    logger.info("Service starting with Routing for updateChallenges/ prefix...")
     time.sleep(5) 
     while True:
         process_incoming_messages()
