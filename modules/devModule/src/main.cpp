@@ -73,6 +73,13 @@
 */
 
 Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
+// Declare the callback function prototype before setup()
+void callback(char *topic, byte *payload, unsigned int length);
+
+// MQTT client setup
+WiFiClient espClient;
+PubSubClient client(espClient);
+
 
 /*
   STEP 2.1.
@@ -88,6 +95,28 @@ Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
 
   callback() is below.
 */
+
+/*
+  Use this to send data back to the MQTT broker.
+  Example usage: sendDataToServer("challenges/Status", "Task Completed");
+*/
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+
+    // Convert String to char array for the PubSubClient library
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
 
 void performActionBasedOnPayload(String payload)
 {
@@ -135,7 +164,10 @@ void performActionBasedOnPayload(String payload)
   // 4. Push to the hardware
   matrix.writeDisplay();
 
-  // No delay needed here if you want it to stay permanently!
+  /* Example of feedback:
+    Letting the server know the message was received and displayed.
+ */
+  sendDataToServer("challenges/Feedback", "Displayed: " + payload);
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -157,12 +189,6 @@ void callback(char *topic, byte *payload, unsigned int length)
   performActionBasedOnPayload(message);
 }
 
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
-
-// MQTT client setup
-WiFiClient espClient;
-PubSubClient client(espClient);
 
 void setup()
 {
@@ -205,6 +231,7 @@ void setup()
       Serial.println("Connected to MQTT");
       client.subscribe(mqttTopic); // Subscribe to the control topic
       Serial.println("Connected to topic");
+      sendDataToServer("challenges/SystemLog", String(mqttClient) + " is online.");
     }
     else
     {
