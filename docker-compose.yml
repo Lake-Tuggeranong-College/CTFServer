@@ -78,8 +78,8 @@ services:
   # Custom DB-to-MQTT Publisher
   db_publisher:
     build: 
-      context: ./db_publisher_app
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./db_publisher_app/Dockerfile
     container_name: CTF-DB-Publisher
     restart: unless-stopped
     depends_on:
@@ -94,11 +94,12 @@ services:
       MQTT_PORT: 1883
       POLL_INTERVAL_SECONDS: 5
     volumes:
-      - db_publisher_data:/app
+      # BIND MOUNT: This maps the local folder to the container.
+      # Changes to publisher.py on your host will be immediately visible inside.
+      - ./db_publisher_app:/app
     networks:
-      - public   # To talk to the MQTT Broker
-      - private  # To fetch data from MySQL
-
+      - public
+      - private
     
   container_manager:
     build:

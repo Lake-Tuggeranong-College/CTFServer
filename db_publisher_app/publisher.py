@@ -4,21 +4,18 @@ import json
 import mysql.connector
 import paho.mqtt.client as mqtt
 from datetime import datetime
-import logging # <-- Import the logging module
-
+import logging 
+import queue # Added for thread-safe message handling
 
 # --- Logging Setup ---
-# Set up basic configuration for logging
-# Set level to DEBUG for maximum output, which helps with container debugging.
 logging.basicConfig(
-    level=logging.DEBUG, # Changed to DEBUG to capture all detail
+    level=logging.DEBUG, 
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
-# Alias the logger for convenience
 logger = logging.getLogger(__name__)
 
-# --- Configuration (Defaults from docker-compose.yml) ---
+# --- Configuration ---
 DB_HOST = os.getenv("DB_HOST", "CTF-MySQL") 
 DB_NAME = os.getenv("DB_NAME", "CyberCity")
 DB_USER = os.getenv("DB_USER", "CyberCity")
@@ -28,150 +25,177 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", 1883))
 POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", 5))
 
 TOPIC_PREFIX = "challenges/" 
-# File to store the list of module names from the previous run
+UPDATE_PREFIX = "updateChallenges/"
 TRACKING_FILE = "/app/published_modules.json"
 
-# --- Mosquitto Client Setup ---
-def on_connect(client, userdata, flags, rc):
-    # Replaced print() with logger.info()
-    logger.info(f"Connected to MQTT broker: {mqtt.connack_string(rc)}")
+# Thread-safe queue to store incoming MQTT messages
+msg_queue = queue.Queue()
 
-logger.info(f"Connecting to MQTT broker... {MQTT_HOST}:{MQTT_PORT}") # Added before connect
-# Adjusted client instantiation for modern paho-mqtt versions to suppress warning
+# --- Database Functions ---
+
+def log_event_to_db(event_text, username="esp32"):
+    """Logs an entry into the eventLog table with a timestamp."""
+    try:
+        conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+        cur = conn.cursor()
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        query = "INSERT INTO eventLog (username, eventText, datePosted) VALUES (%s, %s, %s);"
+        cur.execute(query, (username, event_text, current_time))
+        conn.commit()
+        logger.info(f"Event logged to eventLog: {event_text}")
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to log event: {e}")
+
+def log_module_data_to_db(module_name, data_text):
+    """
+    Finds ModuleID from Challenges table and logs data to ModuleData table.
+    """
+    try:
+        conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+        cur = conn.cursor(dictionary=True)
+        
+        # 1. Find the ID for this module name
+        cur.execute("SELECT ID FROM Challenges WHERE moduleName = %s LIMIT 1;", (module_name,))
+        result = cur.fetchone()
+        
+        if result:
+            module_id = result['ID']
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            # 2. Insert into ModuleData
+            insert_query = "INSERT INTO ModuleData (ModuleID, DateTime, Data) VALUES (%s, %s, %s);"
+            cur.execute(insert_query, (module_id, current_time, data_text))
+            conn.commit()
+            logger.info(f"ModuleData logged: ModuleID {module_id}, Data: {data_text}")
+        else:
+            logger.warning(f"Could not log ModuleData: No module found named '{module_name}'")
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to log ModuleData: {e}")
+
+def update_database_from_mqtt(module_name, new_value):
+    """Updates Challenges table. Returns True if match found."""
+    updated = False
+    try:
+        conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
+        cur = conn.cursor()
+        query = "UPDATE Challenges SET moduleValue = %s WHERE moduleName = %s;"
+        cur.execute(query, (new_value, module_name))
+        conn.commit()
+        updated = (cur.rowcount > 0)
+        cur.close()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to update Challenges: {e}")
+    return updated
+
+# --- Mosquitto Client Setup ---
+
+def on_connect(client, userdata, flags, rc):
+    if rc == 0:
+        logger.info("Connected to MQTT broker successfully.")
+        # Subscribe to prefixed topics and top-level special topics
+        client.subscribe(f"{TOPIC_PREFIX}#", qos=1)
+        client.subscribe(f"{UPDATE_PREFIX}#", qos=1) # New subscription for updates
+        client.subscribe("EventLog", qos=1)
+        client.subscribe("ModuleData", qos=1)
+        logger.info(f"Subscribed to {TOPIC_PREFIX}#, {UPDATE_PREFIX}#, EventLog, and ModuleData")
+    else:
+        logger.error(f"Connection failed with code {rc}")
+
+def on_message(client, userdata, msg):
+    """Callback triggered on message arrival."""
+    try:
+        if msg.retain:
+            logger.debug(f"Ignoring retained message on {msg.topic}")
+            return
+
+        payload = msg.payload.decode('utf-8')
+        logger.debug(f"Live message received on {msg.topic}")
+        msg_queue.put((msg.topic, payload))
+    except Exception as e:
+        logger.error(f"Error in on_message callback: {e}")
+
+def process_incoming_messages():
+    """Processes messages based on topic logic."""
+    while not msg_queue.empty():
+        topic, payload = msg_queue.get()
+        
+        # 1. Handle Top-Level special topics (No prefix)
+        if topic == "EventLog":
+            log_event_to_db(payload)
+        
+        elif topic == "ModuleData":
+            if "," in payload:
+                m_name, m_data = payload.split(",", 1)
+                log_module_data_to_db(m_name.strip(), m_data.strip())
+            else:
+                logger.debug(f"ModuleData received with invalid format: {payload}")
+        
+        # 2. Handle updateChallenges/ prefix (Updates moduleValue)
+        elif topic.startswith(UPDATE_PREFIX):
+            sub_topic = topic[len(UPDATE_PREFIX):]
+            logger.info(f"Update request for module '{sub_topic}' with value: {payload}")
+            success = update_database_from_mqtt(sub_topic, payload)
+            if not success:
+                logger.warning(f"Failed to update challenge: Module '{sub_topic}' not found.")
+                    
+        msg_queue.task_done()
+
+# Initialize MQTT Client
 mqtt_client = mqtt.Client(callback_api_version=mqtt.CallbackAPIVersion.VERSION1)
 mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message 
 mqtt_client.connect(MQTT_HOST, MQTT_PORT, 60)
 mqtt_client.loop_start()
 
-# --- Topic Tracking Functions ---
+# --- Topic Tracking & DB Polling ---
+
 def load_previous_modules():
-    """Loads the set of module names published in the previous run."""
     if os.path.exists(TRACKING_FILE):
         with open(TRACKING_FILE, 'r') as f:
-            try:
-                # Load the list of names and convert to a set for fast lookup
-                logger.debug(f"Loading previous modules from {TRACKING_FILE}.")
-                return set(json.load(f))
-            except json.JSONDecodeError:
-                # Replaced print() with logger.warning()
-                logger.warning(f"Could not decode {TRACKING_FILE}. Starting fresh.")
+            try: return set(json.load(f))
+            except: pass
     return set()
 
 def save_current_modules(current_module_names):
-    """Saves the set of currently published module names."""
     with open(TRACKING_FILE, 'w') as f:
-        # Save the set back as a list
         json.dump(list(current_module_names), f)
-    logger.debug(f"Saved {len(current_module_names)} current modules to {TRACKING_FILE}.") # Added debug log
 
-# --- Core Logic ---
 def read_and_publish_data():
-    
-    # Load the module names published in the last successful run
     previous_module_names = load_previous_modules()
     current_module_names = set()
-
     try:
-        # Added debug log before connecting to DB
-        logger.debug(f"Attempting to connect to database: {DB_USER}@{DB_HOST}/{DB_NAME}")
-        conn = mysql.connector.connect(
-            host=DB_HOST,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS
-        )
-        logger.debug("Database connection successful.")
+        conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor(dictionary=True)
-
-        query = "SELECT moduleName, moduleValue FROM Challenges;"
-        logger.debug(f"Executing query: {query}")
-        cur.execute(query)
-        
+        cur.execute("SELECT moduleName, moduleValue FROM Challenges;")
         results = cur.fetchall()
-        
-        published_count = 0
-        
-        if results:
-            for record in results:
-                
-                module_name = record.get('moduleName')
-                module_value = record.get('moduleValue')
-
-                if not module_name or module_value is None:
-                    logger.debug(f"Skipping record with invalid data: moduleName={module_name}, moduleValue={module_value}")
-                    continue # Skip invalid records
-
-                # 1. Prepare topic and payload
-                module_name_clean = str(module_name).strip().replace(' ', '_').replace('/', '_')
-                unique_topic = f"{TOPIC_PREFIX}{module_name_clean}"
-                payload = str(module_value)
-                
-                # 2. Publish (Update/Retain) the current value
-                # We use retain=True here to ensure the topic persists on the broker
-                mqtt_client.publish(unique_topic, payload, qos=1, retain=True)
-                published_count += 1
-                
-                # Added a debug log for each publication
-                logger.debug(f"Published topic: {unique_topic}, payload: '{payload}'")
-                
-                # 3. Track the module name for the current run
-                current_module_names.add(module_name)
-            
-            # Replaced print() with logger.info()
-            logger.info(f"Published/Updated {published_count} individual values.")
-        else:
-            logger.info("No records found in the 'Challenges' table to publish.") # Added log for empty results
-        
+        for record in results:
+            m_name = record.get('moduleName')
+            m_val = record.get('moduleValue')
+            if m_name and m_val is not None:
+                clean_name = str(m_name).strip().replace(' ', '_').replace('/', '_')
+                mqtt_client.publish(f"{TOPIC_PREFIX}{clean_name}", str(m_val), qos=1, retain=True)
+                current_module_names.add(m_name)
         cur.close()
         conn.close()
 
-        # --- Topic Clearing Logic ---
-        # Find topics that were published last time but are missing now
-        topics_to_clear = previous_module_names - current_module_names
-        cleared_count = 0
-        
-        for module_name_to_clear in topics_to_clear:
-            module_name_clean = str(module_name_to_clear).strip().replace(' ', '_').replace('/', '_')
-            clear_topic = f"{TOPIC_PREFIX}{module_name_clean}"
-            
-            # Publish with an empty payload and retain=True to clear the retained message
-            mqtt_client.publish(clear_topic, payload=None, qos=1, retain=True)
-            cleared_count += 1
-            
-            # Added a debug log for each cleared topic
-            logger.debug(f"Cleared retained topic: {clear_topic}")
-            
-        if cleared_count > 0:
-            # Replaced print() with logger.info()
-            logger.info(f"Cleared {cleared_count} old retained topics.")
-
-
+        # Clear old topics
+        for old_name in (previous_module_names - current_module_names):
+            clean_old = str(old_name).strip().replace(' ', '_').replace('/', '_')
+            mqtt_client.publish(f"{TOPIC_PREFIX}{clean_old}", payload=None, qos=1, retain=True)
     except Exception as e:
-        # Replaced print() with logger.error() and removed manual timestamp formatting
-        error_message = str(e)
-        if "Challenges' doesn't exist" in error_message:
-             logger.error("The 'Challenges' table is missing from the database.")
-        elif "Unknown column" in error_message:
-             logger.error("Missing required column(s) in the 'Challenges' table.")
-        else:
-             # Use exc_info=True to print the full traceback for better debugging
-             logger.error(f"Could not read database or publish to MQTT: {e}", exc_info=True) 
-             
-        # IMPORTANT: If the run failed, we DO NOT update the tracking file, 
-        # so we will re-attempt clearing on the next successful run.
-        return 
-
-
-    # --- Save State ---
-    # Only save the new list if the database read and publishing was successful
+        logger.error(f"Polling error: {e}")
     save_current_modules(current_module_names)
 
-
 if __name__ == "__main__":
-    # Replaced print() with logger.info()
-    logger.info("DB Publisher service started. Polling database...")
-    # Give the database a moment to fully initialize
-    time.sleep(10) 
+    logger.info("Service starting with Routing for updateChallenges/ prefix...")
+    time.sleep(5) 
     while True:
+        process_incoming_messages()
         read_and_publish_data()
         time.sleep(POLL_INTERVAL)
