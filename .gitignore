@@ -8,3 +8,21 @@ mosquitto/log/
 # Ignore Mosquitto runtime files
 mosquitto/data/mosquitto.db
 mosquitto/log/mosquitto.log
+
+# PlatformIO specific
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# VS Code & IDE specific
+.vscode/
+.clang_complete
+.gcc-flags.json
+
+# Build artifacts and temp files
+bin/
+build/
+*.pyc
+
+# Local/Secret files (if you use custom environment variables)
+*.ini.local
