@@ -54,11 +54,11 @@ def log_module_data_to_db(module_name, data_text):
     try:
         conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor(dictionary=True)
-        
+        logger.debug(f"Attempting to log ModuleData for module '{module_name}' with data: {data_text}") 
+
         # 1. Find the ID for this module name
         cur.execute("SELECT ID FROM Challenges WHERE moduleName = %s LIMIT 1;", (module_name,))
         result = cur.fetchone()
-        logger.info(f"Module Data ID: {result['ID']})
         if result:
             module_id = result['ID']
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -113,7 +113,7 @@ def on_message(client, userdata, msg):
             return
 
         payload = msg.payload.decode('utf-8')
-        logger.debug(f"Live message received on {msg.topic}")
+        # logger.debug(f"Live message received on {msg.topic}")
         msg_queue.put((msg.topic, payload))
     except Exception as e:
         logger.error(f"Error in on_message callback: {e}")
