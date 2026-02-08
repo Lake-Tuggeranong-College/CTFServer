@@ -5,96 +5,26 @@
   Ensure to only change what is asked, and not to remove any required libraries.
 */
 
-/*
-  This works using the MQTT broker (mosquitto, installed on the CyberRange server), in combination with the database,
-  and the databaseToMQTT.py script, setup as a service on the CyberRange server. The script detects any changes to the
-  'challenges/CurrentOutput' column, and sends them to the broker, using the information from the row of the change
-  in order to send it to the associated topic (challenges/Module).
-
-  This means that, if you register a module on the website with the 'Module' set as 'AnnoyingPeizo'. And write '4' to the
-  'CurrentOutput' of the 'AnnoyingPeizo' row, the script will send to the topic:
-
-  'challenges/AnnoyingPeizo'
-
-  The message:
-
-  '4'
-
-  That message is sent to the ESP32 subscribed to that topic.
-
-  that topic, is what needs to be put into the 'mqttTopic' const char* inside of sensitiveInformation.h, in order to associate
-  the ESP32 with its respective database row within challenges.
-
-  Example inside of sensitveInformation.h:
-
-  const char* mqttTopic = "challenges/Servo";
-
-  STEP 0.
-  ENSURE THE sensitiveInformation.h FILE IS CONFIGURED CORRECTLY.
-  OPEN THE sensitiveInformation.h FILE AND ENSURE THE FOLLOWING VARIABLES ARE CORRECT:
-  - mqttClient (Should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc)
-  - mqttTopic  (Should match the 'ModuleName' column of the database row for this ESP32)
-  - mqttServer (Should be the IP address of the DEV or PROD server.)
-*/
-
 // REQUIRED LIBRARIES, DONT REMOVE
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
-
-// ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
-
-// Follow the steps:
-
-/*
-  STEP 1.
-  DECLARE REQUIRED LIBRARIES, e.g:
-
-  #include <ESP32Servo.h> // For servos.
-
-  Do it below this comment
-*/
+#include "sensitiveInformation.h" // ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
 
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
-/*
-  STEP 2.
-  DECLARE REQUIRED PINS, e.g:
-
-  #declare redLEDPin 17
-
-  OR
-
-  int redLEDPin = 17; // Red LED pin.
-
-  Do it below this comment
-*/
-
+// Hardware setup
 Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
+
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
 
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
-
-
-/*
-  STEP 2.1.
-  SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
-  setup() is probably better, but callback() should work too.
-
-  Go to the setup() function for additional instructions (Examples).
-*/
-
-/*
-  STEP 3.
-  PROGRAM THE callback() FUNCTION TO USE THE WIRED UP COMPONENTS AS DESIRED.
-
-  callback() is below.
-*/
 
 /*
   Use this to send data back to the MQTT broker.
@@ -120,84 +50,46 @@ void sendDataToServer(String topic, String message)
 
 void performActionBasedOnPayload(String payload)
 {
-  // Implement your action logic here based on the payload
-  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
-  // Add your action code here
-
-  /*
-  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
-
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
-  challenge is completed)
-
-  if ((char)payload[0]) {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-    delay(250);
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-  */
   Serial.print("Displaying message on matrix: ");
   Serial.println(payload);
 
-  // 1. Set rotation to horizontal
-  // 1 = 90 degrees, 3 = 270 degrees. Try both to see which matches your wiring.
   matrix.setRotation(1);
-
-  // 2. Clear and reset cursor
   matrix.clear();
   matrix.setCursor(0, 0);
-
-  // 3. Print the message
-  // Note: If the message is longer than the screen, only the first few chars show.
   matrix.print(payload);
-
-  // 4. Push to the hardware
   matrix.writeDisplay();
-
-  /* Example of feedback:
-    Letting the server know the message was received and displayed.
- */
-  sendDataToServer("challenges/Feedback", "Displayed: " + payload);
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
-  // 1. Create a local String and reserve memory for efficiency
   String message = "";
   for (int i = 0; i < length; i++)
   {
     message += (char)payload[i];
   }
 
-  // 2. Print the formatted output
+  String internalPrefix = "__INTERNAL__";
+  if (message.startsWith(internalPrefix)) 
+  {
+    message = message.substring(internalPrefix.length());
+  }
+
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
   Serial.println(message);
 
-  // 3. Pass the String version to your action function
   performActionBasedOnPayload(message);
 }
 
-
 void setup()
 {
-  /*
-    STEP 3. CONTINUED.
-    DECLARE YOUR pinMode()'s below, e.g:
+  // Seed random number generator using noise from an analog pin
+  randomSeed(analogRead(0));
 
-    pinMode(redLEDPin, OUTPUT);
-  */
+  // Construct the MQTT topic dynamically
+  topicBuffer = "challenges/" + String(mqttClient);
+  mqttTopic = topicBuffer.c_str();
 
   Serial.begin(9600);
   while (!Serial)
@@ -214,13 +106,11 @@ void setup()
     Serial.println("Connecting to WiFi..");
   }
   Serial.println();
-  Serial.print("Connected to WiFI");
-  Serial.print("IP address: ");
+  Serial.print("Connected to WiFI. IP address: ");
   Serial.println(WiFi.localIP());
 
-  // Setting up MQTT
   client.setServer(mqttServer, mqttPort);
-  client.setCallback(callback); // Set the callback function to handle incoming messages
+  client.setCallback(callback);
 
   // Connecting to MQTT Broker
   while (!client.connected())
@@ -229,9 +119,8 @@ void setup()
     if (client.connect(mqttClient))
     {
       Serial.println("Connected to MQTT");
-      client.subscribe(mqttTopic); // Subscribe to the control topic
-      Serial.println("Connected to topic");
-      sendDataToServer("challenges/SystemLog", String(mqttClient) + " is online.");
+      client.subscribe(mqttTopic);
+      sendDataToServer("EventLog", String(mqttClient) + " is online.");
     }
     else
     {
@@ -241,11 +130,12 @@ void setup()
     }
   }
 
-  matrix.begin(0x70); // pass in the address
+  matrix.begin(0x70);
 }
 
 void loop()
-{ // The loop function likely does not require change in the majority of circumstances.
+{ 
+  // 1. Handle Connection Persistence
   if (!client.connected())
   {
     while (!client.connected())
@@ -255,7 +145,6 @@ void loop()
       {
         Serial.println("Reconnected to MQTT");
         client.subscribe(mqttTopic);
-        Serial.println("Connected to topic");
       }
       else
       {
@@ -265,5 +154,25 @@ void loop()
       }
     }
   }
+
+  // 2. Generate and send a random number periodically
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now;
+
+    // Generate random number between 0 and 100,000
+    long randomNumber = random(0, 100001);
+    
+    // Construct the update topic (e.g., updateChallenges/Windmill)
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    
+    // Send the random number to the server
+    sendDataToServer(updateTopic, String(randomNumber));
+    
+    // Optional: Log to ModuleData
+    // sendDataToServer("ModuleData", String(mqttClient) + "," + String(randomNumber));
+  }
+
   client.loop(); // Check for incoming messages and keep the connection alive
 }
