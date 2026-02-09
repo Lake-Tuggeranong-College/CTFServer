@@ -6,21 +6,27 @@ services:
     container_name: CTF-PHPWebserver
     image: php:8.2-apache
     ports:
-      - "8000:80"  # Accessible to other devices on the network
+      - "8000:80"
     volumes:
-      # For Debugging:
-      # - .:/var/www/html  # Mount PHP files from the current directory
-      # For Production:
-      - ./php/website/:/var/www/html  # Mount PHP files from the current directory
+      # 1. Mount the entire root of the project to /workspace.
+      # When VS Code attaches, it will see the root folder structure.
+      - .:/workspace
+      
+      # 2. Re-mount the specific website folder for Apache.
+      # This ensures Apache serves the correct files even though we are in a wider workspace.
+      - ./php/website/:/var/www/html
+    
+    # Setting this to /workspace ensures that when you open a terminal in VS Code,
+    # you are at the root of the project.
+    working_dir: /workspace
     restart: unless-stopped
     networks:
-      - public   # To talk to the users
-      - private  # To talk to the database
+      - public
+      - private
     depends_on:
       - mysql
 
   mysql:
-    # Using MariaDB is fully compatible with MySQL client libraries (like the one used in db_publisher)
     image: mariadb:latest 
     container_name: CTF-MySQL
     restart: unless-stopped
@@ -33,32 +39,29 @@ services:
       - mysql-data:/var/lib/mysql
       - ./init_scripts:/docker-entrypoint-initdb.d
     command: --binlog-format=ROW --log-bin=mysql-bin --server-id=1
-    # ports:
-    #   - "3306:3306"
     networks:
-      - private # The database is isolated here
+      - private
     healthcheck:
-      # Command to check if the database is accepting connections
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s # Gives the DB time to initialize before starting checks
+      start_period: 30s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: CTF-PHPMyAdmin
     environment:
-      PMA_HOST: mysql # Link to the MariaDB container service name
-      MYSQL_ROOT_PASSWORD: CTFRootPassw0rd # Use the same root password as MariaDB
-      PMA_PORT: 3306 # MariaDB's internal port
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: CTFRootPassw0rd
+      PMA_PORT: 3306
     ports:
-      - "8081:80" # Expose phpMyAdmin on host port 8081
+      - "8081:80"
     depends_on:
-      - mysql # Use the service name
+      - mysql
     networks:
-      - public   # So you can log in via your browser
-      - private  # To manage the database
+      - public
+      - private
 
   mosquitto:
     image: eclipse-mosquitto:latest 
@@ -66,16 +69,14 @@ services:
     ports:
       - "1883:1883" 
     volumes:
-      # Keep config as a bind mount so you can edit it locally
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      # Switch data and logs to named volumes (hidden from project folder)
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
     environment:
       TZ: "Australia/Sydney"
     networks:
       - public
-  # Custom DB-to-MQTT Publisher
+
   db_publisher:
     build: 
       context: .
@@ -94,8 +95,6 @@ services:
       MQTT_PORT: 1883
       POLL_INTERVAL_SECONDS: 5
     volumes:
-      # BIND MOUNT: This maps the local folder to the container.
-      # Changes to publisher.py on your host will be immediately visible inside.
       - ./db_publisher_app:/app
     networks:
       - public
@@ -109,7 +108,7 @@ services:
     restart: unless-stopped
     depends_on:
       mysql:
-        condition: service_healthy # This is the critical change
+        condition: service_healthy
     environment:
       DB_HOST: CTF-MySQL
       DB_NAME: CyberCity
@@ -119,13 +118,11 @@ services:
       CLEANUP_DURATION_MINUTES: 15
       TZ: "Australia/Sydney"
     volumes:
-      # 1. BIND MOUNT: Syncs local changes in the app directory to the container
       - ./container_manager_app:/home/manager
-      # 2. DOCKER SOCKET: Allows the manager to control the Docker host
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - public
-      - private  # Needs to talk to MySQL
+      - private
 
   docs:
     image: node:current-slim
@@ -135,8 +132,6 @@ services:
       - "8001:3000"
     volumes:
       - ./docs:/app
-    # This script checks for index.html. If it's missing, it writes the 
-    # boilerplate code directly so docsify-cli has something to serve.
     command: >
       sh -c "npm install -g docsify-cli && 
              node setup.js && 
@@ -145,7 +140,6 @@ services:
 volumes:
   mysql-data:
   db_publisher_data:
-  # Define the new named volumes here
   mosquitto-data:
   mosquitto-log:
 
@@ -153,4 +147,4 @@ networks:
   public:
     driver: bridge
   private:
-    internal: true # No external access
+    internal: true
