@@ -431,7 +431,8 @@ INSERT INTO `Users` (`ID`, `Username`, `user_email`, `profile_picture`, `HashedP
 (155, 'TestCase', 'apple@apple', NULL, '$2y$10$zHKfWtwmywHm0DrmG0YKx.HuaVSAq6WBHmeKmO8kUvzxw74/LunXG', 1, 0, 15),
 (156, 'testeddd', 'apple@apple', NULL, '$2y$10$vB76jh/U3G9u1oaA7wdfh.LiIfxulKzaxD2rcJm/KXXhIZaQn7Hy2', 1, 0, 0),
 (157, 'testagain', 'apple@apple', NULL, '$2y$10$RO./sIz8QhyZUXYQU8URfOmagk8eCEyR2IQ0O5Ll6cffN0aAqaw2q', 1, 0, 5),
-(158, 'Brahim', 'brahim@brahim.com', NULL, '$2y$10$AKLy0R/db4JtvOfVepIk/Oj1x7knKV3zEQS9y2md6v8tlhdpLm25W', 1, 0, 0);
+(158, 'Brahim', 'brahim@brahim.com', NULL, '$2y$10$AKLy0R/db4JtvOfVepIk/Oj1x7knKV3zEQS9y2md6v8tlhdpLm25W', 1, 0, 0),
+(159, 'rhys', '0328198@schoolsnet.act.edu.au', NULL, '$2y$10$p8OCJxBjhAuvWroRM37GW.t19c2i.sQzMeSzZz3MfPN8LxhsYolrK', 2, 0, 999);
 
 --
 -- Indexes for dumped tables
