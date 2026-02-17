@@ -13,7 +13,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Check if the image file is set and handle the upload
     if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
-        $targetDir = BASE_URL . "assets/img/challengeImages";
+        $targetDir = BASE_URL . "html/assets/img/challengeImages";
         $targetFile = basename($_FILES["image"]["name"]);
 
         $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             echo "<div class='alert alert-danger'>Sorry, your file was not uploaded.</div>";
             // if everything is ok, try to upload file
         } else {
-             $finalDir = "/var/www".$targetDir."/".$targetFile;
+            $finalDir = "/var/www" . $targetDir . "/" . $targetFile;
             if (move_uploaded_file($_FILES["image"]["tmp_name"], $finalDir)) {
                 echo "<div class='alert alert-success'>The file " . htmlspecialchars(basename($_FILES["image"]["name"])) . " has been uploaded.</div>";
 
@@ -113,9 +113,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
 
-//    if ($stmt->execute()) {
-//    } else {
-//    }
+    //    if ($stmt->execute()) {
+    //    } else {
+    //    }
     header('Location: ' . $_SERVER['REQUEST_URI']);
 }
 ?>
@@ -173,7 +173,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <div class="col-md-6">
                         <label for="dockerChallengeID" class="form-label">Docker Challenge ID</label>
                         <input type="text" class="form-control" id="dockerChallengeID" name="dockerChallengeID"
-                               required>
+                            required>
                     </div>
                     <div class="col-md-6">
                         <label for="categoryID" class="form-label">Select Category</label>
