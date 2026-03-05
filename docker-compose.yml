@@ -2,7 +2,7 @@ services:
   php-webserver:
     build:
       context: .
-      dockerfile: ./php/Dockerfile
+      dockerfile: ./_php/Dockerfile
     container_name: CTF-PHPWebserver
     image: php:8.2-apache
     ports:
@@ -14,11 +14,8 @@ services:
       
       # 2. Re-mount the specific website folder for Apache.
       # This ensures Apache serves the correct files even though we are in a wider workspace.
-      - ./php/website/:/var/www/html
+      - ./:/var/www/html
     
-    # Setting this to /workspace ensures that when you open a terminal in VS Code,
-    # you are at the root of the project.
-    working_dir: /workspace
     restart: unless-stopped
     networks:
       - public
@@ -69,7 +66,7 @@ services:
     ports:
       - "1883:1883" 
     volumes:
-      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./_mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
     environment:
@@ -80,7 +77,7 @@ services:
   db_publisher:
     build: 
       context: .
-      dockerfile: ./db_publisher_app/Dockerfile
+      dockerfile: ./_db_publisher_app/Dockerfile
     container_name: CTF-DB-Publisher
     restart: unless-stopped
     depends_on:
@@ -95,14 +92,14 @@ services:
       MQTT_PORT: 1883
       POLL_INTERVAL_SECONDS: 5
     volumes:
-      - ./db_publisher_app:/app
+      - ./_db_publisher_app:/app
     networks:
       - public
       - private
     
   container_manager:
     build:
-      context: ./container_manager_app
+      context: ./_container_manager_app
       dockerfile: Dockerfile
     container_name: CTF-ContainerManager
     restart: unless-stopped
@@ -118,7 +115,7 @@ services:
       CLEANUP_DURATION_MINUTES: 15
       TZ: "Australia/Sydney"
     volumes:
-      - ./container_manager_app:/home/manager
+      - ./_container_manager_app:/home/manager
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - public
@@ -131,7 +128,7 @@ services:
     ports:
       - "8001:3000"
     volumes:
-      - ./docs:/app
+      - ./_docs:/app
     command: >
       sh -c "npm install -g docsify-cli && 
              node setup.js && 
