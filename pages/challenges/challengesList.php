@@ -18,6 +18,16 @@ if (!$projectID) {
     exit;
 }
 
+// Fetch Project Details for the header
+$projectTitle = "Project Challenges";
+$projectDescription = "";
+$projectQuery = $conn->prepare("SELECT project_title, project_description FROM Projects WHERE project_id = ?");
+$projectQuery->execute([$projectID]);
+if ($pRow = $projectQuery->fetch(PDO::FETCH_ASSOC)) {
+    $projectTitle = $pRow['project_title'];
+    $projectDescription = $pRow['project_description'];
+}
+
 // Helper for safe HTML
 function e(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -49,13 +59,13 @@ function createChallengeCard(array $challengeData): void
         : BASE_URL . "assets/img/challengeImages/Image%20Not%20Found.jpg";
     ?>
     <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-4">
-        <div class="card h-100">
+        <div class="card h-100 shadow-sm border-0">
             <img src="<?= e($imgSrc) ?>" class="card-img-top" alt="<?= e($challengeTitle) ?>"
-                 width="100" height="200" style="object-fit: cover;">
+                 width="100" height="200" style="object-fit: cover; border-top-left-radius: 0.375rem; border-top-right-radius: 0.375rem;">
             <div class="card-body d-flex flex-column">
-                <h5 class="card-title mb-2"><?= e($challengeTitle) ?></h5>
-                <p class="card-text text-muted mb-3">Points: <?= $pointsValue ?></p>
-                <a href="<?= e($href) ?>" class="btn btn-warning mt-auto">Start Challenge</a>
+                <h5 class="card-title h6 mb-2 fw-bold"><?= e($challengeTitle) ?></h5>
+                <p class="card-text text-muted small mb-3">Value: <span class="badge bg-light text-dark"><?= $pointsValue ?> Points</span></p>
+                <a href="<?= e($href) ?>" class="btn btn-warning mt-auto fw-bold">Start Challenge</a>
             </div>
         </div>
     </div>
@@ -83,7 +93,7 @@ function displayResultsByCategory(PDO $conn, int $projectID): void
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (!$rows) {
-        echo "<p class='text-muted'>No challenges found for this project yet.</p>";
+        echo "<div class='alert alert-info'>No challenges have been assigned to this project yet. Check back soon!</div>";
         return;
     }
 
@@ -98,7 +108,7 @@ function displayResultsByCategory(PDO $conn, int $projectID): void
                 $openRow = false;
             }
             $currentCategory = $row['CategoryName'];
-            echo "<h2 class='mt-4 mb-3'>" . e($currentCategory) . "</h2>";
+            echo "<h3 class='mt-5 mb-3 border-bottom pb-2 text-primary'><i class='bi bi-folder2-open me-2'></i>" . e($currentCategory) . "</h3>";
             echo "<div class='row'>";
             $openRow = true;
         }
@@ -112,16 +122,40 @@ function displayResultsByCategory(PDO $conn, int $projectID): void
 }
 ?>
 
+<head>
     <link rel="stylesheet" href="<?= e(BASE_URL) ?>assets/css/moduleList.css">
+    <style>
+        .project-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #ffc107;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
 
-    <h1>Challenges</h1>
-
-    <div class="container-fluid">
-        <?php displayResultsByCategory($conn, $projectID); ?>
+<div class="container py-4">
+    <!-- Project Header Section -->
+    <div class="project-header shadow-sm">
+       
+        <h1 class="display-5 fw-bold"><?= e($projectTitle) ?></h1>
+        <?php if ($projectDescription): ?>
+            <p class="lead text-muted mb-0"><?= nl2br(e($projectDescription)) ?></p>
+        <?php endif; ?>
     </div>
 
-    </body>
-    </html>
+    <div class="mb-4">
+        <h2 class="h4 text-uppercase tracking-wider text-secondary">Available Challenges</h2>
+        <p class="text-muted">Select a task below to begin testing your skills.</p>
+    </div>
+
+    <div class="container-fluid px-0">
+        <?php displayResultsByCategory($conn, $projectID); ?>
+    </div>
+</div>
+
 <?php
 // Flush the buffer only after we've done potential redirects above
 ob_end_flush();
+?>

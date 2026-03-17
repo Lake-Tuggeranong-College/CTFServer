@@ -83,8 +83,6 @@
 
   callback() is below.
 */
-
-
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -211,3 +209,5 @@ void loop()
   }
   client.loop(); // Check for incoming messages and keep the connection alive
 }
+
+
