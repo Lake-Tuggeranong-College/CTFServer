@@ -83,6 +83,7 @@
 
   callback() is below.
 */
+
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -100,7 +101,7 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
 
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
+  Example: turn n/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
   challenge is completed)
 
   if ((char)payload[0]) {
@@ -112,7 +113,6 @@ void performActionBasedOnPayload(byte *payload)
   }
   */
 }
-
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -127,6 +127,8 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   performActionBasedOnPayload(payload);
 }
+
+
 
 // Declare the callback function prototype before setup()
 void callback(char *topic, byte *payload, unsigned int length);
@@ -209,5 +211,3 @@ void loop()
   }
   client.loop(); // Check for incoming messages and keep the connection alive
 }
-
-

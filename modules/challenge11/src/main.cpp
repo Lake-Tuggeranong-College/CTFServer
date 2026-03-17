@@ -83,6 +83,7 @@
 
   callback() is below.
 */
+
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -113,7 +114,6 @@ void performActionBasedOnPayload(byte *payload)
   */
 }
 
-
 void callback(char *topic, byte *payload, unsigned int length)
 {
   Serial.print("Message arrived [");
@@ -127,6 +127,8 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   performActionBasedOnPayload(payload);
 }
+
+
 
 // Declare the callback function prototype before setup()
 void callback(char *topic, byte *payload, unsigned int length);
@@ -209,5 +211,3 @@ void loop()
   }
   client.loop(); // Check for incoming messages and keep the connection alive
 }
-
-
