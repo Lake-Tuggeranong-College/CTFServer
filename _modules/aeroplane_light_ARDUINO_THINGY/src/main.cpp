@@ -67,7 +67,10 @@
   int redLEDPin = 17; // Red LED pin.
 
   Do it below this comment
+
 */
+
+#define redLEDPin 13
 
 /*
   STEP 2.1.
@@ -112,6 +115,15 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -127,11 +139,6 @@ void callback(char *topic, byte *payload, unsigned int length)
 
   performActionBasedOnPayload(payload);
 }
-
-
-
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
 
 // MQTT client setup
 WiFiClient espClient;
@@ -186,6 +193,7 @@ void setup()
       delay(2000);
     }
   }
+  pinMode(redLEDPin, OUTPUT);
 }
 
 void loop()
