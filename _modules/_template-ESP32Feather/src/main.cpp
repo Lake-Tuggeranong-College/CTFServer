@@ -51,7 +51,6 @@
   STEP 1.
   DECLARE REQUIRED LIBRARIES, e.g:
 
-  #include <ESP32Servo.h> // For servos.
 
   Do it below this comment
 */
