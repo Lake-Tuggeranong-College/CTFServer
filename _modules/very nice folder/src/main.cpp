@@ -55,6 +55,11 @@
 
   Do it below this comment
 */
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
 
 #define redLEDPin 13
 
@@ -146,6 +151,35 @@ void callback(char *topic, byte *payload, unsigned int length)
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    long randomNumber = random(0, 100001);
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    sendDataToServer(updateTopic, String(randomNumber));
+  }
+}
+
+
 void setup()
 {
   /*
@@ -219,5 +253,6 @@ void loop()
       }
     }
   }
+  sendPeriodicUpdate(); 
   client.loop(); // Check for incoming messages and keep the connection alive
 }
