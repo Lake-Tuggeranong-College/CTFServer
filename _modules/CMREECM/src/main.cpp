@@ -45,6 +45,12 @@
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
+
 // Follow the steps:
 
 /*
@@ -195,6 +201,47 @@ void setup()
   pinMode(redLEDPin, OUTPUT);
 }
 
+void sendDataToServer(String topic, String message)
+{
+  // 1. Connection Check: Only proceed if the MQTT client is connected
+  if (client.connected())
+  {
+    // --- Logic for sending goes here ---
+    // 2. Debug: Print the topic and message to the Serial Monitor
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    // 3. Publishing: Convert Strings to C-strings and send to the broker
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    
+    // --- Next steps will go here ---
+   // 2. Data: Generate a random "sensor" value between 0 and 100,000
+  long randomNumber = random(0, 100001);
+  // 3. Topic: Construct the special update topic
+  // We use "updateChallenges/" so the server knows this is incoming data
+  String updateTopic = "updateChallenges/" + String(mqttClient);
+    
+  // 4. Transmit: Use the helper function to send the data to the broker
+  sendDataToServer(updateTopic, String(randomNumber));
+
+  }
+}
+
 void loop()
 { // The loop function likely does not require change in the majority of circumstances.
   if (!client.connected())
@@ -214,9 +261,9 @@ void loop()
         Serial.print(client.state());
         delay(2000);
       }
+      sendPeriodicUpdate(); // Send periodic updates to the server, even when not connected, so that the database can be updated when the connection is re-established.
     }
   }
   client.loop(); // Check for incoming messages and keep the connection alive
-}
-
+}   // Blumpkin
 
