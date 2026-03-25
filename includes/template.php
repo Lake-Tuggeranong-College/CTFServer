@@ -229,13 +229,28 @@ $flash = take_flash();
                                     <li>
                                         <h6 class="dropdown-header">System Admin</h6>
                                     </li>
-                                    <li><a href="<?= BASE_URL; ?>pages/admin/userList.php" class="dropdown-item">User List</a></li>
-                                    <li><a href="<?= BASE_URL; ?>pages/admin/contactpage.php" class="dropdown-item">View Contacts</a></li>
-                                    <li><a href="<?= BASE_URL; ?>pages/admin/challengeRegister.php" class="dropdown-item">Create Challenges</a></li>
-                                    <li><a href="<?= BASE_URL; ?>pages/admin/createCategory.php" class="dropdown-item">Create Category</a></li>
-                                    <li><a href="<?= BASE_URL; ?>pages/admin/challengeEdit.php" class="dropdown-item">Edit Challenge</a></li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/userList.php" class="dropdown-item">Users</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/contactMessages.php" class="dropdown-item">Contact Messages</a></li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/challengeCreate.php" class="dropdown-item">Create Challenges</a></li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/challengeEdit.php" class="dropdown-item">Edit Challenges</a></li>
 
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/categoryCreate.php" class="dropdown-item">Create Category</a></li>
+                                                                        <li><a href="<?= BASE_URL; ?>pages/admin/categoryEdit.php" class="dropdown-item">Edit Category</a></li>
+
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
                                     <li><a href="<?= BASE_URL; ?>pages/admin/projectCreate.php" class="dropdown-item">Create Project</a></li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/projectEdit.php" class="dropdown-item">Edit Project</a></li>
 
                                     <li>
                                         <hr class="dropdown-divider">
