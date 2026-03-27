@@ -42,6 +42,13 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "Adafruit_ADT7410.h"
+
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -68,6 +75,8 @@
 
   Do it below this comment
 */
+
+#define redLEDPin 13
 
 /*
   STEP 2.1.
@@ -112,6 +121,15 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -128,12 +146,49 @@ void callback(char *topic, byte *payload, unsigned int length)
   performActionBasedOnPayload(payload);
 }
 
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
-
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+void sendDataToServer(String topic, String message)
+{
+  // 1. Connection Check: Only proceed if the MQTT client is connected
+  if (client.connected())
+  {
+    // 2. Debug: Print the topic and message to the Serial Monitor
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+
+    // 3. Publishing: Convert Strings to C-strings and send to the broker
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    
+    // 2. Data: Generate a random "sensor" value between 0 and 100,000
+    long randomNumber = random(0, 100001);
+
+    // 3. Topic: Construct the special update topic
+    // We use "updateChallenges/" so the server knows this is incoming data
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    
+    // 4. Transmit: Use the helper function to send the data to the broker
+    sendDataToServer(updateTopic, String(randomNumber));
+  }
+}
 
 void setup()
 {
@@ -184,6 +239,8 @@ void setup()
       delay(2000);
     }
   }
+  sendDataToServer("EventLog", String(mqttClient) + " is online");
+  pinMode(redLEDPin, OUTPUT);
 }
 
 void loop()
@@ -207,5 +264,9 @@ void loop()
       }
     }
   }
+  // 2. Handle periodic data transmission
+  // We call our function here so it checks the timer every single loop
+  sendPeriodicUpdate(); 
+
   client.loop(); // Check for incoming messages and keep the connection alive
 }

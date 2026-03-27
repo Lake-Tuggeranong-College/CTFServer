@@ -67,13 +67,17 @@
   int redLEDPin = 17; // Red LED pin.
 
   Do it below this comment
+
+  
 */
+#define redLEDPin 13
 void performActionBasedOnPayload(byte *payload)
 {
  // Implement your action logic here based on the payload
   // For example, if the payload represents a number, you could convert it and use it to control a motor speed
   // Add your action code here
-
+Serial.print("Payload: ");
+Serial.println((char)payload[0]);
   /*
   Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
 
@@ -84,6 +88,7 @@ void performActionBasedOnPayload(byte *payload)
     Serial.println("LED OFF");
     digitalWrite(redLEDPin, LOW);
   }
+Serial.print("Payload: ");
 
   Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
   challenge is completed)
@@ -96,7 +101,15 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+  if ((char)payload[0]) {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+    delay(250);
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
 }
+
 /*
   STEP 2.1.
   SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
@@ -111,6 +124,9 @@ void performActionBasedOnPayload(byte *payload)
 
   callback() is below.
 */
+
+
+
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -129,7 +145,6 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 
 // Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
 
 // MQTT client setup
 WiFiClient espClient;
@@ -184,6 +199,7 @@ void setup()
       delay(2000);
     }
   }
+  pinMode(redLEDPin, OUTPUT); // Example pinMode declaration for the red LED pin.
 }
 
 void loop()

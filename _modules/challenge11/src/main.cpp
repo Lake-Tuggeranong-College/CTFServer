@@ -42,6 +42,11 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "Adafruit_ADT7410.h"
+
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000;
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -69,6 +74,8 @@
   Do it below this comment
 */
 
+#define redLEDPin 13
+
 /*
   STEP 2.1.
   SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
@@ -93,13 +100,7 @@ void performActionBasedOnPayload(byte *payload)
   /*
   Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
 
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
+  
 
   Example: turn n/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
   challenge is completed)
@@ -112,6 +113,15 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
 }
 
 void callback(char *topic, byte *payload, unsigned int length)
@@ -131,11 +141,44 @@ void callback(char *topic, byte *payload, unsigned int length)
 
 
 // Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
+// void callback(char *topic, byte *payload, unsigned int length);
 
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+
+
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+  Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    client.publish(topic.c_str(), message.c_str());
+}
+
+void sendPeriodicUpdate()
+{
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now;
+    long randomNumber = random(0, 100001);
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    sendDataToServer(updateTopic, String(randomNumber));
+
+
+  }
+}
 
 void setup()
 {
@@ -186,6 +229,7 @@ void setup()
       delay(2000);
     }
   }
+  pinMode(redLEDPin, OUTPUT);
 }
 
 void loop()
@@ -209,5 +253,7 @@ void loop()
       }
     }
   }
+  sendPeriodicUpdate();
   client.loop(); // Check for incoming messages and keep the connection alive
+  
 }
