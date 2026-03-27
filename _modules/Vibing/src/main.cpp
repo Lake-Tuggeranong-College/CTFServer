@@ -56,6 +56,36 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+// Morse code definitions
+#define DOT_DURATION 200
+#define DASH_DURATION 600
+#define SYMBOL_PAUSE 200
+#define LETTER_PAUSE 600
+#define redLEDPin 13
+
+char* morseCode[26] = {
+  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
+};
+
+// Function to blink Morse code for a letter
+char* blinkMorse(char letter) {
+  int index = toupper(letter) - 'A';
+  if (index < 0 || index > 25) return NULL; // Ignore non-letters
+  char* code = morseCode[index];
+  for (int i = 0; code[i] != '\0'; i++) {
+    digitalWrite(redLEDPin, HIGH);
+    if (code[i] == '.') {
+      delay(DOT_DURATION);
+    } else {
+      delay(DASH_DURATION);
+    }
+    digitalWrite(redLEDPin, LOW);
+    delay(SYMBOL_PAUSE);
+  }
+  delay(LETTER_PAUSE - SYMBOL_PAUSE); // Pause between letters
+  return code;
+}
+
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -83,7 +113,7 @@ PubSubClient client(espClient);
   Do it below this comment
 */
 
-#define redLEDPin 13
+
 
 /*
   STEP 2.1.
@@ -99,43 +129,15 @@ PubSubClient client(espClient);
 
   callback() is below.
 */
-void performActionBasedOnPayload(byte *payload)
+void performActionBasedOnPayload(byte *payload, unsigned int length)
 {
-  // Implement your action logic here based on the payload
-  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
-  // Add your action code here
-
-  /*
-  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
-
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
+  // Blink the payload as Morse code
+  Serial.print("Blinking Morse code for: ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+    blinkMorse((char)payload[i]);
   }
-
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
-  challenge is completed)
-
-  if ((char)payload[0]) {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-    delay(250);
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-  */
-Serial.print("Payload");
-Serial.println((char)payload[0]);
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
+  Serial.println();
 }
 
 
@@ -175,7 +177,7 @@ void sendPeriodicUpdate()
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
-    sendDataToServer(updateTopic, String(randomNumber));
+    sendDataToServer(updateTopic, String(blinkMorse('A')));
   } 
 }
 
@@ -192,7 +194,7 @@ void callback(char *topic, byte *payload, unsigned int length)
   }
   Serial.println();
 
-  performActionBasedOnPayload(payload);
+  performActionBasedOnPayload(payload, length);
 }
 
 void loop()
