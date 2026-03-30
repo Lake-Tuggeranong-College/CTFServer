@@ -58,7 +58,7 @@ PubSubClient client(espClient);
 
 // Morse code definitions
 #define DOT_DURATION 200
-#define DASH_DURATION 600
+#define DASH_DURATION 800
 #define SYMBOL_PAUSE 200
 #define LETTER_PAUSE 600
 #define redLEDPin 13
@@ -177,7 +177,13 @@ void sendPeriodicUpdate()
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
+    sendDataToServer(updateTopic, String(blinkMorse('I')));
+    sendDataToServer(updateTopic, String(blinkMorse('N')));
+    sendDataToServer(updateTopic, String(blinkMorse('K')));
+    sendDataToServer(updateTopic, String(blinkMorse('M')));
     sendDataToServer(updateTopic, String(blinkMorse('A')));
+    sendDataToServer(updateTopic, String(blinkMorse('N')));
+
   } 
 }
 
@@ -257,7 +263,7 @@ void setup()
   client.setServer(mqttServer, mqttPort);
   client.setCallback(callback); // Set the callback function to handle incoming messages
 
-  // Connecting to MQTT Broker
+  // Connecting to MQTT Broker68
   while (!client.connected())
   {
     Serial.println("Connecting to MQTT...");
