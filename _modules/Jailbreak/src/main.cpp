@@ -42,6 +42,16 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+// below library is relevant for the temperature sensor
+#include "Adafruit_ADT7410.h"
+
+// Create the ADT7410 temperature sensor object
+// pdf: https://cdn-learn.adafruit.com/downloads/pdf/iot-temperature-logger-with-arduino-and-adafruit-io.pdf
+Adafruit_ADT7410 tempsensor = Adafruit_ADT7410();
+
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
 
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
@@ -146,6 +156,45 @@ void callback(char *topic, byte *payload, unsigned int length)
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+void sendDataToServer(String topic, String message)
+{
+  // 1. Connection Check: Only proceed if the MQTT client is connected
+  if (client.connected())
+  {
+    // --- Logic for sending goes here ---
+    // 2. Debug: Print the topic and message to the Serial Monitor
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    // 3. Publishing: Convert Strings to C-strings and send to the broker
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    
+    // 2. Data: Generate a random "sensor" value between 0 and 100,000
+    long randomNumber = random(0, 100001);
+    // 3. Topic: Construct the special update topic
+    // We use "updateChallenges/" so the server knows this is incoming data
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    
+    // 4. Transmit: Use the helper function to send the data to the broker
+    sendDataToServer(updateTopic, String(randomNumber));
+  }
+}
+
 void setup()
 {
   /*
@@ -196,6 +245,7 @@ void setup()
     }
   }
   pinMode(redLEDPin, OUTPUT);
+  sendDataToServer("EventLog/" + String(mqttClient), String(mqttClient) + " is online");
 }
 
 void loop()
@@ -219,5 +269,6 @@ void loop()
       }
     }
   }
+  sendPeriodicUpdate();
   client.loop(); // Check for incoming messages and keep the connection alive
 }
