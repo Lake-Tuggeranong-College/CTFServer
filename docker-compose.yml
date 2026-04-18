@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: ./_php/Dockerfile
     container_name: CTF-PHPWebserver
-    image: php:8.2-apache
+    image: php:8.5-apache
     ports:
       - "80-89:80"
     volumes:
