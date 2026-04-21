@@ -83,7 +83,7 @@ function displayResultsByCategory(PDO $conn, int $projectID): void
         JOIN Challenges AS ch        ON cat.id = ch.categoryID
         JOIN ProjectChallenges AS pc ON ch.id = pc.challenge_id
         JOIN Projects AS p           ON pc.project_id = p.project_id
-        WHERE p.project_id = :project_id
+        WHERE p.project_id = :project_id AND Enabled = 1
         ORDER BY cat.CategoryName, ch.challengeTitle;
     ";
 
