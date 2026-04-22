@@ -4,220 +4,198 @@ if (!authorisedAccess(false, false, true)) {
     header("Location:../../index.php");
 }
 ?>
-<h2 style="margin-left: 41%;" class="mt-5">Register New Challenge</h2>
-<?php
 
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white p-3">
+                    <h4 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Register New Challenge</h4>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <?php
+                    if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                        $uploadOk = 1;
+                        $targetFile = "default_challenge.png";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+                        // Unique Image Naming Logic
+                        if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
+                            $targetDir = "/var/www" . BASE_URL . "html/assets/img/challengeImages/";
+                            $safeTitle = preg_replace('/[^a-z0-9]+/', '-', strtolower($_POST["challengeTitle"]));
+                            $uuid = bin2hex(random_bytes(4));
+                            $extension = pathinfo($_FILES["image"]["name"], PATHINFO_EXTENSION);
+                            
+                            $newFileName = $safeTitle . "-" . $uuid . "." . $extension;
+                            $targetFilePath = $targetDir . $newFileName;
 
+                            if (getimagesize($_FILES["image"]["tmp_name"]) !== false) {
+                                if (move_uploaded_file($_FILES["image"]["tmp_name"], $targetFilePath)) {
+                                    $targetFile = $newFileName;
+                                }
+                            }
+                        }
 
-    // Check if the image file is set and handle the upload
-    if (isset($_FILES["image"]) && $_FILES["image"]["error"] == 0) {
-        $targetDir = BASE_URL . "html/assets/img/challengeImages";
-        $targetFile = basename($_FILES["image"]["name"]);
+                        // Prepare Data
+                        $challengeTitle = $_POST["challengeTitle"];
+                        $challengeText = $_POST["challengeText"];
+                        $flag = $_POST["flag"];
+                        $pointsValue = $_POST["pointsValue"];
+                        $enabled = isset($_POST["enabled"]) ? 1 : 0;
+                        $categoryID = $_POST["categoryID"];
+                        $projectID = $_POST["projectID"];
 
-        $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
-        $uploadOk = 1;
+                        // Logic for Module/Docker (Container is now strictly NULL)
+                        $moduleName = (!empty($_POST['hasModule'])) ? $_POST["moduleName"] : null;
+                        $moduleValue = (!empty($_POST['hasModule'])) ? $_POST["moduleValue"] : null;
+                        $dockerChallengeID = (!empty($_POST['hasDocker'])) ? $_POST["dockerChallengeID"] : null;
+                        $container = null; // Forced to NULL as requested
 
-        // Check if image file is a actual image or fake image
-        $check = getimagesize($_FILES["image"]["tmp_name"]);
-        if ($check !== false) {
-            $uploadOk = 1;
-        } else {
-            echo "<div class='alert alert-danger'>File is not an image.</div>";
-            $uploadOk = 0;
-        }
+                        $insertSql = "INSERT INTO Challenges (challengeTitle, challengeText, flag, pointsValue, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID) 
+                                      VALUES (:title, :text, :flag, :points, :mName, :mVal, :dId, :cont, :img, :enabled, :catId)";
 
-        // Check if file already exists
-        if (file_exists($targetFile)) {
-            echo "<div class='alert alert-danger'>Sorry, file already exists.</div>";
-            $uploadOk = 0;
-        }
+                        $stmt = $conn->prepare($insertSql);
+                        $stmt->execute([
+                            ':title' => $challengeTitle, ':text' => $challengeText, ':flag' => $flag,
+                            ':points' => $pointsValue, ':mName' => $moduleName, ':mVal' => $moduleValue,
+                            ':dId' => $dockerChallengeID, ':cont' => $container, ':img' => $targetFile,
+                            ':enabled' => $enabled, ':catId' => $categoryID
+                        ]);
 
-        // Check file size
-        if ($_FILES["image"]["size"] > 500000) {
-            echo "<div class='alert alert-danger'>Sorry, your file is too large.</div>";
-            $uploadOk = 0;
-        }
-
-        // Allow certain file formats
-        if ($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg" && $imageFileType != "gif") {
-            echo "<div class='alert alert-danger'>Sorry, only JPG, JPEG, PNG & GIF files are allowed.</div>";
-            $uploadOk = 0;
-        }
-
-        // Check if $uploadOk is set to 0 by an error
-        if ($uploadOk == 0) {
-            echo "<div class='alert alert-danger'>Sorry, your file was not uploaded.</div>";
-            // if everything is ok, try to upload file
-        } else {
-            $finalDir = "/var/www" . $targetDir . "/" . $targetFile;
-            if (move_uploaded_file($_FILES["image"]["tmp_name"], $finalDir)) {
-                echo "<div class='alert alert-success'>The file " . htmlspecialchars(basename($_FILES["image"]["name"])) . " has been uploaded.</div>";
-
-                // Insert new challenge
-                $challengeTitle = $_POST["challengeTitle"];
-                $challengeText = $_POST["challengeText"];
-                $flag = $_POST["flag"];
-                $pointsValue = $_POST["pointsValue"];
-                $moduleName = $_POST["moduleName"];
-                $moduleValue = $_POST["moduleValue"];
-                $dockerChallengeID = !empty($_POST["dockerChallengeID"]) ? $_POST["dockerChallengeID"] : null;
-                $container = !empty($_POST["container"]) ? $_POST["container"] : null;
-                $image = $targetFile;
-                $enabled = $_POST["enabled"];
-                $categoryID = $_POST["categoryID"];
-                $projectID = $_POST["projectID"];
-
-                $insertSql = "INSERT INTO Challenges (challengeTitle, challengeText, flag, pointsValue, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID) 
-                                      VALUES (:challengeTitle, :challengeText, :flag, :pointsValue, :moduleName, :moduleValue, :dockerChallengeID, :container, :image, :enabled, :categoryID)";
-
-                $stmt = $conn->prepare($insertSql);
-                $stmt->bindParam(':challengeTitle', $challengeTitle, PDO::PARAM_STR);
-                $stmt->bindParam(':challengeText', $challengeText, PDO::PARAM_STR);
-                $stmt->bindParam(':flag', $flag, PDO::PARAM_STR);
-                $stmt->bindParam(':pointsValue', $pointsValue, PDO::PARAM_INT);
-                $stmt->bindParam(':moduleName', $moduleName, PDO::PARAM_STR);
-                $stmt->bindParam(':moduleValue', $moduleValue, PDO::PARAM_STR);
-                $stmt->bindParam(':dockerChallengeID', $dockerChallengeID, PDO::PARAM_STR);
-                $stmt->bindParam(':container', $container, PDO::PARAM_INT);
-                $stmt->bindParam(':image', $image, PDO::PARAM_STR);
-                $stmt->bindParam(':enabled', $enabled, PDO::PARAM_INT);
-                $stmt->bindParam(':categoryID', $categoryID, PDO::PARAM_INT);
-
-                if ($stmt->execute()) {
-                    // Get the last inserted challenge ID
-                    $challengeID = $conn->lastInsertId();
-
-                    // Insert into ProjectChallenges table
-
-                    $insertProjectChallengeSql = "INSERT INTO ProjectChallenges (challenge_id, project_id) VALUES (:challenge_id, :project_id)";
-                    $stmtProjectChallenge = $conn->prepare($insertProjectChallengeSql);
-                    $stmtProjectChallenge->bindParam(':challenge_id', $challengeID, PDO::PARAM_INT);
-                    $stmtProjectChallenge->bindParam(':project_id', $projectID, PDO::PARAM_INT);
-
-                    if ($stmtProjectChallenge->execute()) {
-                        echo "<div class='alert alert-success'>Challenge registered and linked to project successfully.</div>";
-                    } else {
-                        echo "<div class='alert alert-danger'>Error linking challenge to project.</div>";
+                        $challengeID = $conn->lastInsertId();
+                        $stmtProject = $conn->prepare("INSERT INTO ProjectChallenges (challenge_id, project_id) VALUES (?, ?)");
+                        
+                        if ($stmtProject->execute([$challengeID, $projectID])) {
+                            echo "<div class='alert alert-success'>Challenge registered successfully!</div>";
+                        }
                     }
-                } else {
-                    echo "<div class='alert alert-danger'>Error registering challenge.</div>";
-                }
-            } else {
-                echo "<div class='alert alert-danger'>Sorry, there was an error uploading your file.</div>";
-            }
-        }
-    } else {
-        echo "<div class='alert alert-danger'>No file was uploaded or there was an error uploading the file.</div>";
-    }
+                    ?>
 
+                    <form method="post" action="" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-9">
+                                <label class="form-label fw-bold">Challenge Title *</label>
+                                <input type="text" class="form-control form-control-lg" name="challengeTitle" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Points *</label>
+                                <input type="number" class="form-control form-control-lg" name="pointsValue" required>
+                            </div>
+                        </div>
 
-    //    if ($stmt->execute()) {
-    //    } else {
-    //    }
-    header('Location: ' . $_SERVER['REQUEST_URI']);
-}
-?>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Challenge Description *</label>
+                            <textarea class="form-control" name="challengeText" rows="4" required></textarea>
+                        </div>
 
-<div class="container mt-5">
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Register Challenge</h4>
-        </div>
-        <div class="card-body">
-            <form method="post" action="" enctype="multipart/form-data">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="challengeTitle" class="form-label">Challenge Title</label>
-                        <input type="text" class="form-control" id="challengeTitle" name="challengeTitle" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="flag" class="form-label">Flag</label>
-                        <input type="text" class="form-control" id="flag" name="flag" required>
-                    </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-primary">Challenge Flag *</label>
+                                <input type="text" class="form-control border-primary" name="flag" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Image Upload</label>
+                                <input type="file" class="form-control" name="image">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Associated Project *</label>
+                                <select class="form-select" name="projectID" required>
+                                    <option value="" selected disabled>Select project...</option>
+                                    <?php
+                                    $projectList = $conn->query("SELECT project_id, project_name FROM CyberCity.Projects");
+                                    while ($row = $projectList->fetch(PDO::FETCH_ASSOC)) {
+                                        echo '<option value="' . $row['project_id'] . '">' . htmlspecialchars($row['project_name']) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Category *</label>
+                                <select class="form-select" name="categoryID" required>
+                                    <option value="" selected disabled>Select category...</option>
+                                    <?php
+                                    $categoryList = $conn->query("SELECT id, CategoryName FROM CyberCity.Category");
+                                    while ($row = $categoryList->fetch(PDO::FETCH_ASSOC)) {
+                                        echo '<option value="' . $row['id'] . '">' . htmlspecialchars($row['CategoryName']) . '</option>';
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="card bg-light border-0 mb-4">
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" id="moduleToggle" name="hasModule" onclick="toggleSection('moduleFields', this)">
+                                            <label class="form-check-label" for="moduleToggle">Link Module?</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" id="dockerToggle" name="hasDocker" onclick="toggleSection('dockerFields', this)">
+                                            <label class="form-check-label" for="dockerToggle">Link Docker?</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" type="checkbox" name="enabled" value="1" checked>
+                                            <label class="form-check-label">Enabled</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="moduleFields" style="display:none;" class="row g-3 mb-4 p-3 border rounded-3 bg-white mx-0">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Module Name *</label>
+                                <input type="text" class="form-control" name="moduleName">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Module Value *</label>
+                                <input type="text" class="form-control" name="moduleValue">
+                            </div>
+                        </div>
+
+                        <div id="dockerFields" style="display:none;" class="row g-3 mb-4 p-3 border rounded-3 bg-white mx-0">
+                            <div class="col-12 text-center">
+                                <label class="form-label fw-semibold">Docker Challenge ID *</label>
+                                <input type="text" class="form-control w-50 mx-auto" name="dockerChallengeID">
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Register Challenge</button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="mb-3">
-                    <label for="challengeText" class="form-label">Challenge Text</label>
-                    <textarea class="form-control" id="challengeText" name="challengeText" rows="4" required></textarea>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="pointsValue" class="form-label">Points Value</label>
-                        <input type="number" class="form-control" id="pointsValue" name="pointsValue" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="container" class="form-label">Container</label>
-                        <input type="number" class="form-control" id="container" name="container" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="enabled" class="form-label">Enabled</label>
-                        <input type="number" class="form-control" id="enabled" name="enabled" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="moduleName" class="form-label">Module Name</label>
-                        <input type="text" class="form-control" id="moduleName" name="moduleName" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="moduleValue" class="form-label">Module Value</label>
-                        <input type="text" class="form-control" id="moduleValue" name="moduleValue" required>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="dockerChallengeID" class="form-label">Docker Challenge ID</label>
-                        <input type="text" class="form-control" id="dockerChallengeID" name="dockerChallengeID"
-                            required>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="categoryID" class="form-label">Select Category</label>
-                        <select class="form-select" id="categoryID" name="categoryID" required>
-                            <?php
-                            // Assuming $conn is your PDO connection
-                            $categoryList = $conn->query("SELECT id, CategoryName FROM CyberCity.Category");
-                            while ($row = $categoryList->fetch(PDO::FETCH_ASSOC)) {
-                                echo '<option value="' . htmlspecialchars($row['id']) . '">' . htmlspecialchars($row['CategoryName']) . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-
-                </div>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-
-                        <label for="projectID" class="form-label">Select Project</label>
-                        <!-- These options should be populated dynamically from the Projects table -->
-                        <select class="form-select" id="projectID" name="projectID" required>
-
-                            <?php
-                            $projectList = $conn->query("SELECT project_id, project_name FROM CyberCity.Projects");
-                            while ($row = $projectList->fetch(PDO::FETCH_ASSOC)) {
-                                echo '<option value="' . htmlspecialchars($row['project_id']) . '">' . htmlspecialchars($row['project_name']) . '</option>';
-                            }
-                            ?>
-                        </select>
-
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="image" class="form-label">Image Upload</label>
-                    <input type="file" class="form-control" id="image" name="image" required>
-                </div>
-
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">Register Challenge</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-</div>
+<script>
+function toggleSection(sectionId, checkbox) {
+    const section = document.getElementById(sectionId);
+    const inputs = section.querySelectorAll('input');
+    
+    if (checkbox.checked) {
+        section.style.display = 'flex';
+        inputs.forEach(input => input.setAttribute('required', ''));
+    } else {
+        section.style.display = 'none';
+        inputs.forEach(input => {
+            input.removeAttribute('required');
+            input.value = '';
+        });
+    }
+}
+</script>

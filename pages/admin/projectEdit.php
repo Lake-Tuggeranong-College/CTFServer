@@ -1,6 +1,6 @@
 <?php
 /**
- * editProject.php
+ * projectEdit.php
  * Administrative page for selecting and editing existing projects.
  */
 
@@ -166,10 +166,10 @@ function e(string $s): string {
         <div class="card shadow-sm mb-4 form-card">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 fw-bold">Project Details</h5>
-                <a href="editProject.php" class="btn btn-sm btn-secondary">Back to Selection</a>
+                <a href="projectEdit.php" class="btn btn-sm btn-secondary">Back to Selection</a>
             </div>
             <div class="card-body">
-                <form action="editProject.php?project_id=<?= e($project['project_id']) ?>" method="POST">
+                <form action="projectEdit.php?project_id=<?= e($project['project_id']) ?>" method="POST">
                     <input type="hidden" name="project_id" value="<?= e($project['project_id']) ?>">
                     
                     <div class="row g-3">
@@ -194,7 +194,7 @@ function e(string $s): string {
                     <hr class="my-4">
 
                     <div class="d-flex justify-content-end gap-2">
-                        <a href="editProject.php" class="btn btn-light border">Cancel</a>
+                        <a href="projectEdit.php" class="btn btn-light border">Cancel</a>
                         <button type="submit" name="update_project" class="btn btn-warning px-4 fw-bold">
                             Update Project
                         </button>
