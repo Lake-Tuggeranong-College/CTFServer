@@ -189,7 +189,7 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
         cdir = resolve_challenge_dir(dockerChallengeID)
     except FileNotFoundError as e:
         log(str(e)); return
-    # log(f"Resolved challenge dir: {cdir}")
+    log(f"Resolved challenge dir: {cdir}")
     compose_file = "docker-compose.yml"
     env_file     = cdir / ".env"
 
@@ -209,19 +209,19 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
         shorthand_command = [
         "docker", "compose", 
         "-f", str(compose_file), 
-        "-p", f"project_{port}", 
+        "-p", f"ctf_containers", 
         "up", "-d", "--build"
         ]
         long_form_command = [
         "docker-compose", 
         "--file", str(compose_file), 
-        "--project-name", f"project_{port}", 
+        "--project-name", f"ctf_containers", 
         "up", "-d", "--build"
             ]
 
         # Use the old docker-compose binary
         subprocess.run(
-            long_form_command,
+            shorthand_command,
             check=True,  # Raises CalledProcessError on non-zero exit code
             cwd=str(cdir),
             capture_output=True,
@@ -238,6 +238,8 @@ def launch_container(userID, challengeID, dockerChallengeID, port, row_id):
         log(f"Launch error (row {row_id}): {e}")
 
 def remove_container(userID, challengeID, dockerChallengeID, port, row_id):
+
+    log(f"Removing container {dockerChallengeID}")
     # Best-effort: if not provided, look it up
     if not dockerChallengeID:
         dockerChallengeID = get_docker_challenge_id(challengeID)
@@ -258,12 +260,14 @@ def remove_container(userID, challengeID, dockerChallengeID, port, row_id):
         return
 
     compose_file = cdir / "docker-compose.yml"
-    log(f"Removing in {cdir} (port {port})")
+   
     try:
+        
         subprocess.run(
-            ["sudo","docker","compose","-p",str(port),"-f",str(compose_file),"down","--volumes","--remove-orphans"],
+            ["docker","compose","-p","ctf_containers","-f","docker-compose.yml","down","--volumes","--remove-orphans"],
             check=True, cwd=str(cdir)
         )
+        log(f"Removing {compose_file} (port {port})")
         active_containers.pop(row_id, None)
         db_query(f"DELETE FROM {TABLE_CONTAINERS} WHERE ID=%s", (row_id,), fetch=False, commit=True)
         log(f"Removed row {row_id} {dockerChallengeID} port {port}")
@@ -354,7 +358,7 @@ def process_binlog_event():
                 # hard cap: take the earliest deadline we know
                 delete_time = min(prior_deadline, computed_deadline) if prior_deadline else computed_deadline
                 docker_challenge_id = get_docker_challenge_id(challenge_id)
-
+                log(docker_challenge_id)
                 if evt == "INSERT":
                     if not port:
                         port = get_next_available_port()
