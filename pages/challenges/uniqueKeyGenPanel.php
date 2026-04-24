@@ -38,13 +38,6 @@ $user_input = isset($_SESSION['user_input']) ? (int)$_SESSION['user_input'] : ''
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UKG panel</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-</head>
-
 <?php if ($_SESSION['verified']): ?>
 <body>
     <div class = "container" style = "margin-top: 20vh;">
