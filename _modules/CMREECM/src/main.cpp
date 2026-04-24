@@ -42,14 +42,9 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "Adafruit_ADT7410.h"
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
-
-// Global variables for topic and timing
-String topicBuffer;
-unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
-
 
 // Follow the steps:
 
@@ -61,6 +56,16 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 
   Do it below this comment
 */
+
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
+// Temperature sensor object
+Adafruit_ADT7410 adt = Adafruit_ADT7410();
+
+#define redLEDPin 13
 
 /*
   STEP 2.
@@ -74,7 +79,7 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 
   Do it below this comment
 */
-#define redLEDPin 13
+
 /*
   STEP 2.1.
   SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
@@ -89,6 +94,7 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 
   callback() is below.
 */
+
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -117,8 +123,9 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
- Serial.print("Payload:");
- Serial.println((char)payload[0]);
+
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
   if ((char)payload[0] == '1') {
     Serial.println("LED ON");
     digitalWrite(redLEDPin, HIGH);
@@ -144,10 +151,38 @@ void callback(char *topic, byte *payload, unsigned int length)
 }
 
 
-
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    float temp = adt.readTempC();
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    sendDataToServer(updateTopic, String(temp));
+  }
+}
+
 
 void setup()
 {
@@ -164,6 +199,14 @@ void setup()
     delay(10);
   }
   delay(1000);
+
+  if (!adt.begin()) {
+    Serial.println("Failed to initialize ADT7410 sensor!");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.println("ADT7410 sensor initialized successfully");
 
   WiFi.begin(ssid, password);
 
@@ -201,47 +244,6 @@ void setup()
   pinMode(redLEDPin, OUTPUT);
 }
 
-void sendDataToServer(String topic, String message)
-{
-  // 1. Connection Check: Only proceed if the MQTT client is connected
-  if (client.connected())
-  {
-    // --- Logic for sending goes here ---
-    // 2. Debug: Print the topic and message to the Serial Monitor
-    Serial.print("Sending message to topic [");
-    Serial.print(topic);
-    Serial.print("]: ");
-    Serial.println(message);
-    // 3. Publishing: Convert Strings to C-strings and send to the broker
-    client.publish(topic.c_str(), message.c_str());
-  }
-  else
-  {
-    Serial.println("Send failed: MQTT not connected.");
-  }
-}
-
-void sendPeriodicUpdate()
-{
-  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
-  unsigned long now = millis();
-  if (now - lastUpdate > updateInterval)
-  {
-    lastUpdate = now; // Reset the timer
-    
-    // --- Next steps will go here ---
-   // 2. Data: Generate a random "sensor" value between 0 and 100,000
-  long randomNumber = random(0, 100001);
-  // 3. Topic: Construct the special update topic
-  // We use "updateChallenges/" so the server knows this is incoming data
-  String updateTopic = "updateChallenges/" + String(mqttClient);
-    
-  // 4. Transmit: Use the helper function to send the data to the broker
-  sendDataToServer(updateTopic, String(randomNumber));
-
-  }
-}
-
 void loop()
 { // The loop function likely does not require change in the majority of circumstances.
   if (!client.connected())
@@ -261,9 +263,9 @@ void loop()
         Serial.print(client.state());
         delay(2000);
       }
-      sendPeriodicUpdate(); // Send periodic updates to the server, even when not connected, so that the database can be updated when the connection is re-established.
     }
   }
+  sendPeriodicUpdate(); 
   client.loop(); // Check for incoming messages and keep the connection alive
-}   // Blumpkin
+}
 
