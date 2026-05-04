@@ -42,6 +42,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "Adafruit_ADT7410.h"
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -56,6 +57,16 @@
   Do it below this comment
 */
 
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
+// Temperature sensor object
+Adafruit_ADT7410 adt = Adafruit_ADT7410();
+
+#define redLEDPin 13
+
 /*
   STEP 2.
   DECLARE REQUIRED PINS, e.g:
@@ -68,7 +79,7 @@
 
   Do it below this comment
 */
-#define redLEDPin 13
+
 /*
   STEP 2.1.
   SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
@@ -83,6 +94,7 @@
 
   callback() is below.
 */
+
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -111,8 +123,9 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
- Serial.print("Payload:");
- Serial.println((char)payload[0]);
+
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
   if ((char)payload[0] == '1') {
     Serial.println("LED ON");
     digitalWrite(redLEDPin, HIGH);
@@ -138,10 +151,38 @@ void callback(char *topic, byte *payload, unsigned int length)
 }
 
 
-
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+    client.publish(topic.c_str(), message.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    float temp = adt.readTempC();
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    sendDataToServer(updateTopic, String(temp));
+  }
+}
+
 
 void setup()
 {
@@ -158,6 +199,14 @@ void setup()
     delay(10);
   }
   delay(1000);
+
+  if (!adt.begin()) {
+    Serial.println("Failed to initialize ADT7410 sensor!");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.println("ADT7410 sensor initialized successfully");
 
   WiFi.begin(ssid, password);
 
@@ -216,7 +265,7 @@ void loop()
       }
     }
   }
+  sendPeriodicUpdate(); 
   client.loop(); // Check for incoming messages and keep the connection alive
 }
-
 
