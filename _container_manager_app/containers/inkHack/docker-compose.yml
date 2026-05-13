@@ -7,7 +7,7 @@ services:
     image: php:8.2-apache
     container_name: BACTA-php_apache
     ports:
-      - "8080:80"
+      - "${PORT}:80"
     volumes:
       - .:/var/www/html
     depends_on:
