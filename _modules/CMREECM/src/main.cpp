@@ -15,6 +15,7 @@
   'CurrentOutput' of the 'AnnoyingPeizo' row, the script will send to the topic:
 
   'challenges/AnnoyingPeizo'
+  
 
   The message:
 
@@ -159,11 +160,32 @@ void sendDataToServer(String topic, String message)
 {
   if (client.connected())
   {
+    // Try to parse the message as a temperature
+    float temp = message.toFloat();
+    String status;
+
+    // Decide status based on temperature thresholds
+    if (message.length() == 0) {
+      status = "No data";
+    } else if (temp > 30.0) {
+      status = "It's hot";
+    } else if (temp > 20.0) {
+      status = "It's warm";
+    } else {
+      status = "It's cold";
+    }
+
     Serial.print("Sending message to topic [");
     Serial.print(topic);
     Serial.print("]: ");
     Serial.println(message);
-    client.publish(topic.c_str(), message.c_str());
+
+    Serial.print("Status: ");
+    Serial.println(status);
+
+    // Publish a combined payload (temperature + status)
+    String payload = message + " - " + status;
+    client.publish(topic.c_str(), payload.c_str());
   }
   else
   {
@@ -268,4 +290,3 @@ void loop()
   sendPeriodicUpdate(); 
   client.loop(); // Check for incoming messages and keep the connection alive
 }
-
