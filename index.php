@@ -4,25 +4,7 @@
 <title>Cyber City | Home</title>
 
 <div class="container mb-4">
-    <div class="card h-100 shadow-sm border-0 bg-body-secondary">
-        <div class="card-body p-4">
-            <h3 class="h5 fw-bold mb-3">Intro Video</h3>
-            <div class="ratio ratio-16x9">
-                <video id="mainVideo" controls playsinline>
-                    <source src="path/to/video.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-            <p class="small text-muted mt-2">Replace <code>path/to/video.mp4</code> with your video file or uncomment the iframe below to embed YouTube.</p>
 
-            <!-- YouTube embed alternative:
-            <div class="ratio ratio-16x9">
-                <iframe src="https://www.youtube.com/embed/CLfvvvWHBSI" title="YouTube video" allowfullscreen></iframe>
-            </div>
-            -->
-        </div>
-    </div>
-    
 <div class="container-fluid bg-body-tertiary py-5 mb-4 border-bottom">
     <div class="container">
         <div class="row align-items-center">

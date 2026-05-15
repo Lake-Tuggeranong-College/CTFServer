@@ -239,6 +239,7 @@ $flash = take_flash();
                                     </li>
                                     <li><a href="<?= BASE_URL; ?>pages/admin/challengeCreate.php" class="dropdown-item">Create Challenges</a></li>
                                     <li><a href="<?= BASE_URL; ?>pages/admin/challengeEdit.php" class="dropdown-item">Edit Challenges</a></li>
+                                    <li><a href="<?= BASE_URL; ?>pages/admin/challengeManager.php" class="dropdown-item">Export/Import Challenges</a></li>
 
                                     <li>
                                         <hr class="dropdown-divider">

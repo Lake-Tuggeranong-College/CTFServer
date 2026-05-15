@@ -1,0 +1,14 @@
+services:
+
+  BACTA-web:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    image: php:8.2-apache
+    container_name: BACTA-php_apache
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - BACTA-db
