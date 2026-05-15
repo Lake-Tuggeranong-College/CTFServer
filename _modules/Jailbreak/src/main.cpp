@@ -195,6 +195,17 @@ void sendPeriodicUpdate()
   }
 }
 
+void printTempData()
+{
+  // wait for first read for accuracy
+  delay(250);
+  // Read and print out the temperature, then convert to *F
+  float c = tempsensor.readTempC();
+  Serial.print("Temp: ");
+  Serial.print(c);
+  Serial.println("C");
+}
+
 void setup()
 {
   /*
@@ -270,5 +281,6 @@ void loop()
     }
   }
   sendPeriodicUpdate();
+  //printTempData();
   client.loop(); // Check for incoming messages and keep the connection alive
 }

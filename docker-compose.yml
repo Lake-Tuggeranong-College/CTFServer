@@ -21,6 +21,7 @@ services:
       - public
       - private
     depends_on:
+      - mosquitto
       - mysql
 
   mysql:

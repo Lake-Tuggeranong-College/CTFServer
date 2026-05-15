@@ -3,6 +3,8 @@
 
 <title>Cyber City | Home</title>
 
+<div class="container mb-4">
+
 <div class="container-fluid bg-body-tertiary py-5 mb-4 border-bottom">
     <div class="container">
         <div class="row align-items-center">
