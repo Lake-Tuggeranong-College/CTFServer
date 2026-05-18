@@ -32,14 +32,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $temperature = random_int(10, 30); // $currentData ? trim($currentData) : 10; // Default to 10 if no data
     if (!empty($_POST['user_input'])) {
         $_SESSION['user_input'] = (int)$_POST['user_input'];
+
+        $num = ($time * pow(($temperature + $_SESSION["user_input"]), 2)) % 1000000;
+        $key = "CTF{SUDORANDOM" . (string)$num . "}";
+        $stmt = $conn->prepare("UPDATE Challenges SET flag = :key WHERE challengeTitle = :name");
+        $stmt->execute([':key' => $key, ':name' => 'Encryption Hunt']);
     } else {
         unset($_SESSION['user_input']);
     }
-
-    $num = ($time * pow(($temperature + $_SESSION["user_input"]), 2)) % 1000000;
-    $key = "CTF{SUDORANDOM" . (string)$num . "}";
-    $stmt = $conn->prepare("UPDATE Challenges SET flag = :key WHERE challengeTitle = :name");
-    $stmt->execute([':key' => $key, ':name' => 'Encryption Hunt']);
 }
 
 $user_input = isset($_SESSION['user_input']) ? (int)$_SESSION['user_input'] : '';
