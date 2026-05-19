@@ -27,7 +27,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         return;
     }
 
-    $command = "mosquitto_sub -h CTF-MQTT-Broker -t 'challenges/TrafficLights' -C 1 -W 5"; 
+    $command = "mosquitto_sub -h CTF-MQTT-Broker -t 'challenges/temperature' -C 1 -W 5"; 
     $currentData = shell_exec($command);
     $temperature = random_int(10, 30); // $currentData ? trim($currentData) : 10; // Default to 10 if no data
     if (!empty($_POST['user_input'])) {
