@@ -15,6 +15,7 @@
   'CurrentOutput' of the 'AnnoyingPeizo' row, the script will send to the topic:
 
   'challenges/AnnoyingPeizo'
+  
 
   The message:
 
@@ -42,6 +43,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "Adafruit_ADT7410.h"
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -55,6 +57,16 @@
 
   Do it below this comment
 */
+
+// Global variables for topic and timing
+String topicBuffer;
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
+// Temperature sensor object
+Adafruit_ADT7410 adt = Adafruit_ADT7410();
+
+#define redLEDPin 13
 
 /*
   STEP 2.
@@ -83,6 +95,7 @@
 
   callback() is below.
 */
+
 void performActionBasedOnPayload(byte *payload)
 {
   // Implement your action logic here based on the payload
@@ -111,6 +124,16 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+
+  Serial.print("Payload:");
+  Serial.println((char)payload[0]);
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
 }
 
 
@@ -128,12 +151,60 @@ void callback(char *topic, byte *payload, unsigned int length)
   performActionBasedOnPayload(payload);
 }
 
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
 
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+void sendDataToServer(String topic, String message)
+{
+  if (client.connected())
+  {
+    // Try to parse the message as a temperature
+    float temp = message.toFloat();
+    String status;
+
+    // Decide status based on temperature thresholds
+    if (message.length() == 0) {
+      status = "No data";
+    } else if (temp > 30.0) {
+      status = "It_is_hot - Put the Arduino in a cooler environment to change this status!";
+    } else if (temp > 20.0) {
+      status = "It_is_warm - Enter - CTF{It_is_warm} - to complete the challenge!";
+    } else {
+      status = "It_is_cold - Put the Arduino in a warm environment to change this status!";
+    }
+
+    Serial.print("Sending message to topic [");
+    Serial.print(topic);
+    Serial.print("]: ");
+    Serial.println(message);
+
+    Serial.print("Status: ");
+    Serial.println(status);
+
+    // Publish a combined payload (temperature + status)
+    String payload = message + " - " + status;
+    client.publish(topic.c_str(), payload.c_str());
+  }
+  else
+  {
+    Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    float temp = adt.readTempC();
+    String updateTopic = "updateChallenges/" + String(mqttClient);
+    sendDataToServer(updateTopic, String(temp));
+  }
+}
+
 
 void setup()
 {
@@ -150,6 +221,14 @@ void setup()
     delay(10);
   }
   delay(1000);
+
+  if (!adt.begin()) {
+    Serial.println("Failed to initialize ADT7410 sensor!");
+    while (1) {
+      delay(1000);
+    }
+  }
+  Serial.println("ADT7410 sensor initialized successfully");
 
   WiFi.begin(ssid, password);
 
@@ -184,6 +263,7 @@ void setup()
       delay(2000);
     }
   }
+  pinMode(redLEDPin, OUTPUT);
 }
 
 void loop()
@@ -207,7 +287,6 @@ void loop()
       }
     }
   }
+  sendPeriodicUpdate(); 
   client.loop(); // Check for incoming messages and keep the connection alive
 }
-
-

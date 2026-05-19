@@ -3,6 +3,6 @@ services:
   bruteforce-server:
     build: .
     ports:
-      - "2223:22" # OUTSIDE:INSIDE
-    container_name: bruteForce_container
+      - "${PORT}:22" # OUTSIDE:INSIDE
+    container_name: bruteForce_container-${PORT}
     restart: unless-stopped

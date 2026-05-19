@@ -19,5 +19,5 @@ const char* mqttClient = "Jailbreak";
 const char* mqttTopic = "challenges/Jailbreak"; // It's worth noting that an ESP32 can subscribe to more than 1 topic
 
 // Replace with the MQTT broker IP address and port (default port for MQTT is 1883)
-const char* mqttServer = "192.168.1.10";  
+const char* mqttServer = "192.168.1.116";  
 const int mqttPort = 1883;
