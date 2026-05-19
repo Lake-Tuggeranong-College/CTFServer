@@ -1,13 +1,14 @@
 FROM ubuntu:latest
 
-# Install SSH and sudo
 RUN apt-get update && apt-get install -y openssh-server
 
 RUN mkdir /var/run/sshd
 
-COPY flag.txt /home/graham/flag.txt
+COPY Alarm.png /home/RoboCop/Alarm.png
 
-RUN useradd -m -s /bin/bash graham && echo 'graham:Password01' | chpasswd
+COPY Burgle.txt /home/RoboCop/Burgle.txt
+
+RUN useradd -m -s /bin/bash RoboCop && echo 'RoboCop:TotallySecure01' | chpasswd
 
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
