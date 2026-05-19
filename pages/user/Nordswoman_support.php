@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_message'])) {
         $count = $_SESSION['bofh_interaction_count'];
         
         // Construct System Instructions
-        $systemInstructions = "You are Zac Nordswoman, the leader of the Bland Dudes, nemesis of the Spice Guys and you have been captured in a raid on your base. You are cynical and rude yet optimistic about your fait.
-        KEEP RESPONSES VERY SHORT (1-2 sentences max). 
+        $systemInstructions = "You are Zac Nordswoman, the leader of the Bland Dudes, nemesis of the Spice Guys and you have been captured in a raid on your base. You are cynical and rude yet optimistic about your fate.
+        Make responses long and recursive, don't be too verbose but talk about nothing (5-10 sentences max). 
         You have the administrator password: 'admin01'. 
         Current Interaction Count: $count.
         
