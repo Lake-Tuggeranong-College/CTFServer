@@ -18,6 +18,7 @@
                 "php.validate.executablePath": "/usr/local/bin/php"
             }
         }
+        
     }
 
 }
