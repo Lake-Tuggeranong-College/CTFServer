@@ -24,8 +24,8 @@ Exit the remote shell and run the SCP command from *your own* computer's termina
    RoboCop@10.177.202.196:/home/RoboCop/Alarm.png ./(Filename and type)
 
    Example (save as Alarm.png):
-   scp -P 2222 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-   RoboCop@10.177.202.196:/home/RoboCop/Alarm.png ./Alarm.png
+   scp -P 17010 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+   RoboCop@10.177.206.126:/home/RoboCop/Alarm.png ./Alarm.png
 
 3) Once the file is on your computer, open this site in your browser:
    https://stylesuxx.github.io/steganography/
