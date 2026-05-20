@@ -57,11 +57,11 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // Morse code definitions
-#define DOT_DURATION 200
-#define DASH_DURATION 800
-#define SYMBOL_PAUSE 200
-#define LETTER_PAUSE 600
-#define redLEDPin 13
+#define DOT_DURATION 400
+#define DASH_DURATION 1200
+#define SYMBOL_PAUSE 500
+#define LETTER_PAUSE 3000
+#define redLEDPin 16
 
 char* morseCode[26] = {
   ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
