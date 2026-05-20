@@ -42,7 +42,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
-#include "Adafruit_ADT7410.h"
 
 
 
@@ -78,7 +77,14 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 
 */
 
-#define redLEDPin 13
+#define onboardRED 13
+#define trafficRED 12
+#define trafficYELLOW 27
+#define trafficGREEN 33
+
+int trafficlightSPEED = 3000;
+
+unsigned long previousMillis = 0;
 
 /*
   STEP 2.1.
@@ -123,14 +129,16 @@ void performActionBasedOnPayload(byte *payload)
     digitalWrite(redLEDPin, LOW);
   }
   */
+
+  
   Serial.print("Payload:");
   Serial.println((char)payload[0]);
   if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
+    Serial.println("SPEED UP");
+    trafficlightSPEED = 50;
   } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
+    Serial.println("SPEED DOWN");
+    trafficlightSPEED = 3000;
   }
 }
 
@@ -152,7 +160,7 @@ void callback(char *topic, byte *payload, unsigned int length)
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void sendDataToServer(String topic, String String(temp))
+void sendDataToServer(String topic, String temp)
 {
   // 1. Connection Check: Only proceed if the MQTT client is connected
   if (client.connected())
@@ -184,17 +192,55 @@ void sendPeriodicUpdate()
     
     // 2. Data: Generate a random "sensor" value between 0 and 100,000
     //long
-    float temp = adt.readTempC();
+    // float temp = adt.readTempC();
 
     // 3. Topic: Construct the special update topic
     // We use "updateChallenges/" so the server knows this is incoming data
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
-    sendDataToServer(updateTopic, String(temp));
+    sendDataToServer(updateTopic, String("metadata"));
     // --- Next steps will go here ---
   }
 }
+
+
+void trafficlightCYCLE()
+{
+  unsigned long currentMillis = millis();
+
+  previousMillis = 0;
+
+  digitalWrite(trafficRED, HIGH);
+  digitalWrite(trafficYELLOW, LOW);
+  digitalWrite(trafficGREEN, LOW);
+
+if (currentMillis - previousMillis >= trafficlightSPEED)
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+  digitalWrite(trafficRED, LOW);
+  digitalWrite(trafficYELLOW, HIGH);
+  digitalWrite(trafficGREEN, LOW);
+
+if (currentMillis - previousMillis >= trafficlightSPEED)
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+  digitalWrite(trafficRED, LOW);
+  digitalWrite(trafficYELLOW, LOW);
+  digitalWrite(trafficGREEN, HIGH);
+  
+if (currentMillis - previousMillis >= trafficlightSPEED)
+    // save the last time you blinked the LED
+    previousMillis = currentMillis;
+
+
+
+}
+
+
+
 
 
 void setup()
@@ -247,9 +293,11 @@ void setup()
     }
   }
 
-  adt.begin(Adafruit_ADT7410 adt = Adafruit_ADT7410();)
+  pinMode(onboardRED, OUTPUT);
+  pinMode(trafficRED, OUTPUT);
+  pinMode(trafficYELLOW, OUTPUT);
+  pinMode(trafficGREEN, OUTPUT);
 
-  pinMode(redLEDPin, OUTPUT);
 }
 
 void loop()
@@ -276,6 +324,8 @@ void loop()
   // 2. Handle periodic data transmission
   // We call our function here so it checks the timer every single loop
   sendPeriodicUpdate();
+
+  trafficlightCYCLE();
 
   client.loop(); // Check for incoming messages and keep the connection alive
 }
