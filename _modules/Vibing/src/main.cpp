@@ -60,8 +60,10 @@ PubSubClient client(espClient);
 #define DOT_DURATION 400
 #define DASH_DURATION 1200
 #define SYMBOL_PAUSE 500
-#define LETTER_PAUSE 3000
+#define LETTER_PAUSE 1500
 #define redLEDPin 16
+#define yellowLEDPin 17
+#define greenLEDPin 15
 
 char* morseCode[26] = {
   ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
@@ -74,12 +76,16 @@ char* blinkMorse(char letter) {
   char* code = morseCode[index];
   for (int i = 0; code[i] != '\0'; i++) {
     digitalWrite(redLEDPin, HIGH);
+    digitalWrite(yellowLEDPin, HIGH);
+    digitalWrite(greenLEDPin, HIGH);
     if (code[i] == '.') {
       delay(DOT_DURATION);
     } else {
       delay(DASH_DURATION);
     }
     digitalWrite(redLEDPin, LOW);
+    digitalWrite(yellowLEDPin, LOW);
+    digitalWrite(greenLEDPin, LOW);
     delay(SYMBOL_PAUSE);
   }
   delay(LETTER_PAUSE - SYMBOL_PAUSE); // Pause between letters
@@ -281,6 +287,8 @@ void setup()
     }
   }
   pinMode(redLEDPin, OUTPUT);
+  pinMode(yellowLEDPin, OUTPUT);
+  pinMode(greenLEDPin, OUTPUT);
 }
 
 
