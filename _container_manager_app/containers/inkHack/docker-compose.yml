@@ -6,3 +6,10 @@ services:
     container_name: BACTA-php_apache
     ports:
       - "${PORT}:80"
+  
+  BACTA-web:
+  build: .
+  image: bacta-web
+  container_name: bacta-web
+  ports:
+    - "6500:6500"
