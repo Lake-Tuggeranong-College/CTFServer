@@ -168,11 +168,11 @@ void sendDataToServer(String topic, String message)
     if (message.length() == 0) {
       status = "No data";
     } else if (temp > 30.0) {
-      status = "It's hot";
+      status = "It_is_hot - Put the Arduino in a cooler environment to change this status!";
     } else if (temp > 20.0) {
-      status = "It's warm";
+      status = "It_is_warm - Enter - CTF{It_is_warm} - to complete the challenge!";
     } else {
-      status = "It's cold";
+      status = "It_is_cold - Put the Arduino in a warm environment to change this status!";
     }
 
     Serial.print("Sending message to topic [");
