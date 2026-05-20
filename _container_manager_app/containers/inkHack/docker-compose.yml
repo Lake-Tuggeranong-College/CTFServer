@@ -1,15 +1,8 @@
 services:
 
-  BACTA-web:
+  BACTA-daemon:
     build: .
-    image: php:8.2-apache
-    container_name: BACTA-php_apache
+    image: bacta-web
+    container_name: bacta-web
     ports:
-      - "${PORT}:80"
-  
-  BACTA-web:
-  build: .
-  image: bacta-web
-  container_name: bacta-web
-  ports:
-    - "6500:6500"
+      - "6500:6500"
