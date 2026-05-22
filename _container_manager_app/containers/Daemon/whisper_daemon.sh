@@ -2,7 +2,7 @@
 
 # Encoded flag: LUCIDFLOW --> 12 21 3 9 4 6 12 15 23
 while true; do
-  { 
+  {
     echo "Whisper Daemon v1.0"
     echo "--------------------"
     echo "12 21 3 9 4 6 12 15 23"

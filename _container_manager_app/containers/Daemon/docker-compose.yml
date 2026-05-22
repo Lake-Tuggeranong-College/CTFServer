@@ -5,5 +5,5 @@ services:
     image: bacta-web
     container_name: bacta-web
     ports:
-     - "6500:6500"
+     - "${PORT}:6500"
     

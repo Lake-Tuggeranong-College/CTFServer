@@ -1,10 +1,9 @@
-#!/bin/sh
+FROM alpine:latest
 
-# Encoded flag: LUCIDFLOW --> 12 21 3 9 4 6 12 15 23
-while true; do
-  { 
-    echo "Whisper Daemon v1.0"
-    echo "--------------------"
-    echo "12 21 3 9 4 6 12 15 23"
-  } | nc -l -p 6500 -q 1
-done
+RUN apk add --no-cache netcat-openbsd
+
+COPY whisper_daemon.sh /whisper_daemon.sh
+RUN chmod +x /whisper_daemon.sh
+
+EXPOSE 6500
+CMD ["/whisper_daemon.sh"]
