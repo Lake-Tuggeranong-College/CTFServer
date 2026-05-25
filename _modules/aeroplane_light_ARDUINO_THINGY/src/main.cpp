@@ -211,9 +211,9 @@ void trafficlightCYCLE()
 
   previousMillis = 0;
 
-  digitalWrite(trafficRED, HIGH);
+  digitalWrite(trafficRED, LOW);
   digitalWrite(trafficYELLOW, LOW);
-  digitalWrite(trafficGREEN, LOW);
+  digitalWrite(trafficGREEN, HIGH);
 
 if (currentMillis - previousMillis >= trafficlightSPEED)
     // save the last time you blinked the LED
@@ -227,9 +227,9 @@ if (currentMillis - previousMillis >= trafficlightSPEED)
     // save the last time you blinked the LED
     previousMillis = currentMillis;
 
-  digitalWrite(trafficRED, LOW);
+  digitalWrite(trafficRED, HIGH);
   digitalWrite(trafficYELLOW, LOW);
-  digitalWrite(trafficGREEN, HIGH);
+  digitalWrite(trafficGREEN, LOW);
   
 if (currentMillis - previousMillis >= trafficlightSPEED)
     // save the last time you blinked the LED
