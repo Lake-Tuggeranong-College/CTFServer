@@ -207,35 +207,24 @@ void sendPeriodicUpdate()
 
 void trafficlightCYCLE()
 {
-  unsigned long currentMillis = millis();
 
-  previousMillis = 0;
+  delay(trafficlightSPEED);
 
   digitalWrite(trafficRED, LOW);
   digitalWrite(trafficYELLOW, LOW);
   digitalWrite(trafficGREEN, HIGH);
 
-if (currentMillis - previousMillis >= trafficlightSPEED)
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
+  delay(trafficlightSPEED);
 
   digitalWrite(trafficRED, LOW);
   digitalWrite(trafficYELLOW, HIGH);
   digitalWrite(trafficGREEN, LOW);
 
-if (currentMillis - previousMillis >= trafficlightSPEED)
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
+  delay(trafficlightSPEED);
 
   digitalWrite(trafficRED, HIGH);
   digitalWrite(trafficYELLOW, LOW);
   digitalWrite(trafficGREEN, LOW);
-  
-if (currentMillis - previousMillis >= trafficlightSPEED)
-    // save the last time you blinked the LED
-    previousMillis = currentMillis;
-
-
 
 }
 
