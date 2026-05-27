@@ -1,8 +1,6 @@
-version: '3'
 services:
-  hawkTuah-server:
+  sshtest-server:
     build: .
     ports:
       - "${PORT}:22" # OUTSIDE:INSIDE
-    container_name: hawkTuah_container
     restart: unless-stopped

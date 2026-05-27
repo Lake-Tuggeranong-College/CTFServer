@@ -2,11 +2,11 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y openssh-server
 
-RUN mkdir /var/run/sshd
+RUN mkdir -p /var/run/sshd
 
-COPY flag.txt /home/cather/HawkFlag.txt
+# To create a unique username, replace both instances of 'User01'. And to create a unique password, replace 'Password01' with the new password.
 
-RUN useradd -m -s /bin/bash cather && echo 'cather:sunshine' | chpasswd
+RUN useradd -m -s /bin/bash User01 && echo 'User01:Password01' | chpasswd
 
 RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
