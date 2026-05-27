@@ -2,7 +2,7 @@ FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y openssh-server
 
-RUN mkdir /var/run/sshd
+RUN mkdir -p /var/run/sshd
 
 COPY Alarm.png /home/CheeseWitch/Alarm.png
 
