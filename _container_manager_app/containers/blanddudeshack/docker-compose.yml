@@ -12,5 +12,3 @@ services:
     ports:
       - "${PORT}:22"
     restart: unless-stopped
-
-
