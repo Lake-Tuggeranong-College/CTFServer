@@ -1,16 +1,14 @@
 services:
 
-  BACTA-web:
-    build: .
-    image: php:8.2-apache
+  bacta-web:
+    build: ./web
     container_name: BACTA-php_apache
     ports:
       - "${PORT}:8081"
 
-
-sshtest-server:
-  build: .
-  ports:
-    - "${PORT}:22" # OUTSIDE:INSIDE
-  restart: unless-stopped
-
+  sshtest-server:
+    build: ./ssh
+    container_name: BACTA-ssh
+    ports:
+      - "${PORT}:22"
+    restart: unless-stopped
