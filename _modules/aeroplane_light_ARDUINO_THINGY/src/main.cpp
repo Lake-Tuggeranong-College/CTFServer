@@ -208,7 +208,6 @@ void sendPeriodicUpdate()
 
 void trafficlightCYCLE()
 {
-  unsigned long currentMillis = millis();
 
   // Check if it is time to change the light
   if (currentMillis - previousMillis >= trafficlightSPEED) {
