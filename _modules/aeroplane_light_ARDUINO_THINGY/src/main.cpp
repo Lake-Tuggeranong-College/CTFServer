@@ -83,8 +83,9 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 #define trafficGREEN 33
 
 int trafficlightSPEED = 3000;
-
+int currentPhase = 0;
 unsigned long previousMillis = 0;
+unsigned long interval = trafficlightSPEED;
 
 /*
   STEP 2.1.
@@ -208,29 +209,33 @@ void sendPeriodicUpdate()
 void trafficlightCYCLE()
 {
 
-  delay(trafficlightSPEED);
+  // Check if it is time to change the light
+  if (currentMillis - previousMillis >= trafficlightSPEED) {
+    previousMillis = currentMillis; // Reset the stopwatch
 
-  digitalWrite(trafficRED, LOW);
-  digitalWrite(trafficYELLOW, LOW);
-  digitalWrite(trafficGREEN, HIGH);
-
-  delay(trafficlightSPEED);
-
-  digitalWrite(trafficRED, LOW);
-  digitalWrite(trafficYELLOW, HIGH);
-  digitalWrite(trafficGREEN, LOW);
-
-  delay(trafficlightSPEED);
-
-  digitalWrite(trafficRED, HIGH);
-  digitalWrite(trafficYELLOW, LOW);
-  digitalWrite(trafficGREEN, LOW);
-
+    if (currentPhase == 0) { 
+      // Switch from Green to Yellow
+      digitalWrite(trafficGREEN, LOW);
+      digitalWrite(trafficYELLOW, HIGH);
+      interval = trafficlightSPEED; // Yellow duration
+      currentPhase = 1; // Move to next phase
+    } 
+    else if (currentPhase == 1) { 
+      // Switch from Yellow to Red
+      digitalWrite(trafficYELLOW, LOW);
+      digitalWrite(trafficRED, HIGH);
+      interval = trafficlightSPEED; // Red duration
+      currentPhase = 2; // Move to next phase
+    } 
+    else if (currentPhase == 2) { 
+      // Switch from Red back to Green
+      digitalWrite(trafficRED, LOW);
+      digitalWrite(trafficGREEN, HIGH);
+      interval = trafficlightSPEED; // Green duration
+      currentPhase = 0; // Reset loop
+    }
+  }
 }
-
-
-
-
 
 void setup()
 {
@@ -286,7 +291,6 @@ void setup()
   pinMode(trafficRED, OUTPUT);
   pinMode(trafficYELLOW, OUTPUT);
   pinMode(trafficGREEN, OUTPUT);
-
 }
 
 void loop()

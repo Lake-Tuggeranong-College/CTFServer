@@ -117,22 +117,39 @@ void updateDisplay(String status, String details = "") {
   }
 }
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  // Convert payload bytes to string
-  String message;
-  for (unsigned int i = 0; i < length; i++) {
-    message += (char)payload[i];
+void performActionBasedOnPayload(byte *payload)
+{
+  // Implement your action logic here based on the payload
+  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
+  // Add your action code here
+
+  /*
+  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
+
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
   }
 
-  // Print received message for debugging
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  Serial.println(message);
+  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
+  challenge is completed)
+
+  if ((char)payload[0]) {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+    delay(250);
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
+  */
+Serial.println("detected change");
 
   // Process commands:
   // "0" = Enable stop mode (brakes on)
-  if (message == "0") {
+  if ((char)payload[0] == '0') {
     Serial.println("HALT");
     currentStatus = "STOPPED";
     updateDisplay(currentStatus, "Emergency brake activated");
@@ -141,7 +158,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     step(RED, PWM_BRK, 0);
   } 
   // "1" = Enable normal mode (accelerate at speed 3)
-  else if (message == "1") {
+  else if ((char)payload[0] == '1') {
     Serial.println("ADVANCE");
     currentStatus = "RUNNING";
     updateDisplay(currentStatus, "Speed: Level 3");
@@ -149,6 +166,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
     delay(2000);
     step(RED, PWM_FWD3, 0);
   }
+}
+
+
+void callback(char* topic, byte* payload, unsigned int length) {
+Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+
+  performActionBasedOnPayload(payload);
 }
 
 void setup() {
