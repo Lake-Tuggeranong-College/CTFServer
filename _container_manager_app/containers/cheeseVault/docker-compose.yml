@@ -3,4 +3,5 @@ services:
     build: .
     ports:
       - "${PORT}:22" # OUTSIDE:INSIDE
+    container_name: cheeseVault
     restart: unless-stopped
