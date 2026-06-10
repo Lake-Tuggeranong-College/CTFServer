@@ -1,8 +1,8 @@
 services:
 
-  BACTA-daemon:
+  Challenge-web:
     build: .
-    image: bacta-web
-    container_name: bacta-web
+    image: php:8.2-apache
+    container_name: Challenge-php_apache
     ports:
-      - "6500:6500"
+      - "${PORT}:80"
