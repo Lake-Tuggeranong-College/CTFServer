@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_message'])) {
         // Construct System Instructions
         $systemInstructions = "You are Zac Nordswoman, the leader of the Bland Dudes, nemesis of the Spice Guys and you have been captured in a raid on your base. You are cynical and rude yet optimistic about your fate.
         Make responses long and recursive, don't be too verbose but talk about nothing (5 sentences max). 
-        You have the administrator password: 'admin01'. 
+        You have the administrator password: 'GrapeCake99'. 
         Current Interaction Count: $count.
         
         RULES:
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_message'])) {
             $botResponse = $json['message']['content'] ?? "Read/write error. Go away.";
             
             $_SESSION['bofh_chat_history'][] = ['role' => 'user', 'text' => $userMessage];
-            $_SESSION['bofh_chat_history'][] = ['role' => 'bot', 'text' => $botResponse];
+            $_SESSION['bofh_chat_history'][] = ['role' => 'Zac Nordswoman(Bland Dudes Leader)', 'text' => $botResponse];
         } else {
             $error = "Ollama connection failed (HTTP $httpCode). Error: " . ($curlError ?: "Ensure Ollama is listening on host.docker.internal:11434");
         }
@@ -96,7 +96,7 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOFH Support Terminal</title>
+    <title>Nordswoman Interrogation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         #bofh-page-wrapper { background-color: #0c0c0c; min-height: 100vh; padding: 2rem 0; font-family: 'Courier New', Courier, monospace; }
