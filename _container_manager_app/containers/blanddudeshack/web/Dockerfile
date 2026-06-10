@@ -1,9 +1,14 @@
+# The initial image is from the official PHP image with Apache. It is fixed at 8.2 to ensure compatibility
 FROM php:8.2-apache
 
-RUN sed -i 's/80/8081/g' /etc/apache2/ports.conf && \
-    sed -i 's/:80/:8081/g' /etc/apache2/sites-enabled/000-default.conf
+# Install necessary dependencies for PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql
 
-COPY blandWebpage.php /var/www/html/index.php
-COPY Beige.jpeg /var/www/html/Beige.jpeg
+# mask the true file hierarchy of the container
+RUN a2enmod rewrite
 
-EXPOSE 8081
+# chown means 'change owner', -R means 'recursive', apache can read/write files without access conflicts
+RUN chown -R www-data:www-data /var/www/html
+
+# copy the webpage file to the Apache server's root directory
+COPY blandWebpage.php /var/www/html
