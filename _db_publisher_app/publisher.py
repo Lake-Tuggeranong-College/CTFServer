@@ -27,6 +27,7 @@ POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", 5))
 TOPIC_PREFIX = "challenges/" 
 UPDATE_PREFIX = "updateChallenges/"
 EVENT_PREFIX = "eventLog/"
+MODULE_DATA_PREFIX = "moduleData/"
 TRACKING_FILE = "/app/published_modules.json"
 
 # Thread-safe queue to store incoming MQTT messages
@@ -34,7 +35,7 @@ msg_queue = queue.Queue()
 
 # --- Database Functions ---
 
-def log_event_to_db(moduleName="UNKNOWN", event_text):
+def log_event_to_db(moduleName, event_text):
     """Logs an entry into the eventLog table with a timestamp."""
     try:
         conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
@@ -102,8 +103,8 @@ def on_connect(client, userdata, flags, rc):
         # Subscribe to prefixed topics and top-level special topics
         client.subscribe(f"{TOPIC_PREFIX}#", qos=1)
         client.subscribe(f"{UPDATE_PREFIX}#", qos=1) # New subscription for updates
-        client.subscribe("EventLog", qos=1)
-        client.subscribe("ModuleData", qos=1)
+        client.subscribe(f"{EVENT_PREFIX}#", qos=1)
+        client.subscribe(f"{MODULE_DATA_PREFIX}#", qos=1)
         logger.info(f"Subscribed to {TOPIC_PREFIX}#, {UPDATE_PREFIX}#, EventLog, and ModuleData")
     else:
         logger.error(f"Connection failed with code {rc}")
@@ -112,11 +113,11 @@ def on_message(client, userdata, msg):
     """Callback triggered on message arrival."""
     try:
         if msg.retain:
-            logger.debug(f"Ignoring retained message on {msg.topic}")
+            #logger.debug(f"Ignoring retained message on {msg.topic}")
             return
 
         payload = msg.payload.decode('utf-8')
-        logger.debug(f"Live message received on {msg.topic}")
+        # logger.debug(f"Live message received on {msg.topic}")
         msg_queue.put((msg.topic, payload))
     except Exception as e:
         logger.error(f"Error in on_message callback: {e}")
@@ -125,20 +126,24 @@ def process_incoming_messages():
     """Processes messages based on topic logic."""
     while not msg_queue.empty():
         topic, payload = msg_queue.get()
+        # logger.debug(f"DATA RECEIVED:'{topic}' with value: {payload}")
         
         # 1. Handle Top-Level special topics (No prefix)
         if topic.startswith(EVENT_PREFIX):
             sub_topic = topic[len(EVENT_PREFIX):]
             logger.info(f"Event Log detected:'{sub_topic}' with value: {payload}")
-            log_event_to_db(payload, topic)
+            log_event_to_db(sub_topic, payload)
             
         
-        elif topic == "ModuleData":
-            if "," in payload:
-                m_name, m_data = payload.split(",", 1)
-                log_module_data_to_db(m_name.strip(), m_data.strip())
-            else:
-                logger.debug(f"ModuleData received with invalid format: {payload}")
+        elif topic.startswith(MODULE_DATA_PREFIX):
+            sub_topic = topic[len(MODULE_DATA_PREFIX):]
+            logger.info(f"Module Data detected:'{sub_topic}' with value: {payload}")
+            log_module_data_to_db(sub_topic, payload)
+            # if "," in payload:
+            #     m_name, m_data = payload.split(",", 1)
+            #     log_module_data_to_db(m_name.strip(), m_data.strip())
+            # else:
+            #     logger.debug(f"ModuleData received with invalid format: {payload}")
         
         # 2. Handle updateChallenges/ prefix (Updates moduleValue)
         elif topic.startswith(UPDATE_PREFIX):
