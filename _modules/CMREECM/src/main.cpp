@@ -157,7 +157,7 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 void sendDataToServer(String topic, String message)
-{
+{ 
   if (client.connected())
   {
     // Try to parse the message as a temperature
@@ -168,11 +168,11 @@ void sendDataToServer(String topic, String message)
     if (message.length() == 0) {
       status = "No data";
     } else if (temp > 30.0) {
-      status = "It_is_hot - Put the Arduino in a cooler environment to change this status!";
+      status = "This is a message from the vault, try decrypting it: 36,14,28,83,31,0,6";
     } else if (temp > 20.0) {
-      status = "It_is_warm - Enter - CTF{It_is_warm} - to complete the challenge!";
+      status = "This is a message from the vault, try decrypting it: 57,21,83,26,4,79,5,5,2,12";
     } else {
-      status = "It_is_cold - Put the Arduino in a warm environment to change this status!";
+      status = "This is a message from the vault, try decrypting it: 36,14,28,83,20,0,30,0";
     }
 
     Serial.print("Sending message to topic [");
