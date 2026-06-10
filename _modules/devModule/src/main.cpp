@@ -26,6 +26,8 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+
+
 /*
   Use this to send data back to the MQTT broker.
   Example usage: sendDataToServer("challenges/Status", "Task Completed");
@@ -45,6 +47,26 @@ void sendDataToServer(String topic, String message)
   else
   {
     Serial.println("Send failed: MQTT not connected.");
+  }
+}
+
+void sendPeriodicUpdate()
+{
+  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
+  {
+    lastUpdate = now; // Reset the timer
+    
+    // --- Next steps will go here ---
+        // 2. Data: Generate a random "sensor" value between 0 and 100,000
+    long randomNumber = random(0, 100001);
+        // 3. Topic: Construct the special update topic
+    // We use "updateChallenges/" so the server knows this is incoming data
+    String updateTopic = "moduleData/" + String(mqttClient);
+    
+    // 4. Transmit: Use the helper function to send the data to the broker
+    sendDataToServer(updateTopic, String(randomNumber));
   }
 }
 
