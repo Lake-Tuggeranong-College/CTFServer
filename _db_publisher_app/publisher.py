@@ -26,6 +26,7 @@ POLL_INTERVAL = int(os.getenv("POLL_INTERVAL_SECONDS", 5))
 
 TOPIC_PREFIX = "challenges/" 
 UPDATE_PREFIX = "updateChallenges/"
+EVENT_PREFIX = "eventLog/"
 TRACKING_FILE = "/app/published_modules.json"
 
 # Thread-safe queue to store incoming MQTT messages
@@ -33,14 +34,14 @@ msg_queue = queue.Queue()
 
 # --- Database Functions ---
 
-def log_event_to_db(event_text, username="esp32"):
+def log_event_to_db(moduleName="UNKNOWN", event_text):
     """Logs an entry into the eventLog table with a timestamp."""
     try:
         conn = mysql.connector.connect(host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASS)
         cur = conn.cursor()
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        query = "INSERT INTO eventLog (username, eventText, datePosted) VALUES (%s, %s, %s);"
-        cur.execute(query, (username, event_text, current_time))
+        query = "INSERT INTO eventLog (moduleName, eventText, datePosted) VALUES (%s, %s, %s);"
+        cur.execute(query, (moduleName, event_text, current_time))
         conn.commit()
         logger.info(f"Event logged to eventLog: {event_text}")
         cur.close()
@@ -126,8 +127,11 @@ def process_incoming_messages():
         topic, payload = msg_queue.get()
         
         # 1. Handle Top-Level special topics (No prefix)
-        if topic == "EventLog":
-            log_event_to_db(payload)
+        if topic.startswith(EVENT_PREFIX):
+            sub_topic = topic[len(EVENT_PREFIX):]
+            logger.info(f"Event Log detected:'{sub_topic}' with value: {payload}")
+            log_event_to_db(payload, topic)
+            
         
         elif topic == "ModuleData":
             if "," in payload:
