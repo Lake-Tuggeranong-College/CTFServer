@@ -1,52 +1,3 @@
-/*
- This is a template for all ESP32's using MQTT within the CyberRange.
- Read through the steps and ensure everything is setup correctly.
- This is made such that programming physical functions is as easy as possible.
- Ensure to only change what is asked, and not to remove any required libraries.
-*/
-
-/*
- This works using the MQTT broker (mosquitto, installed on the CyberRange server), in combination with the database,
- and the databaseToMQTT.py script, setup as a service on the CyberRange server. The script detects any changes to the
- 'challenges/CurrentOutput' column, and sends them to the broker, using the information from the row of the change
- in order to send it to the associated topic (challenges/Module).
-
-
- This means that, if you register a module on the website with the 'Module' set as 'AnnoyingPeizo'. And write '4' to the
- 'CurrentOutput' of the 'AnnoyingPeizo' row, the script will send to the topic:
-
-
- 'challenges/AnnoyingPeizo'
- // Global variables for topic and timing
-
-
- The message:
-
-
- '4'
-
-
- That message is sent to the ESP32 subscribed to that topic.
-
-
- that topic, is what needs to be put into the 'mqttTopic' const char* inside of sensitiveInformation.h, in order to associate
- the ESP32 with its respective database row within challenges.
-
-
- Example inside of sensitveInformation.h:
-
-
- const char* mqttTopic = "challenges/Servo";
-
-
- STEP 0.
- ENSURE THE sensitiveInformation.h FILE IS CONFIGURED CORRECTLY.
- OPEN THE sensitiveInformation.h FILE AND ENSURE THE FOLLOWING VARIABLES ARE CORRECT:
- - mqttClient (Should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc)
- - mqttTopic  (Should match the 'ModuleName' column of the database row for this ESP32)
- - mqttServer (Should be the IP address of the DEV or PROD server.)
-*/
-
 // Global variables for topic and timing
 
 // REQUIRED LIBRARIES, DONT REMOVE
@@ -55,6 +6,7 @@
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
 #include "Adafruit_ADT7410.h"
+
 String topicBuffer;
 unsigned long lastUpdate = 0;
 const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
@@ -98,76 +50,48 @@ char* blinkMorse(char letter) {
  return code;
 }
 
-// ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
-
-// Follow the steps:
-
-/*
- STEP 1.
- DECLARE REQUIRED LIBRARIES, e.g:
-
-
- #include <ESP32Servo.h> // For servos.
-
-
- Do it below this comment
-*/
-
-/*
- STEP 2.
- DECLARE REQUIRED PINS, e.g:
-
-
- #declare redLEDPin 17
-
-
- OR
-
-
- int redLEDPin = 17; // Red LED pin.
-
-
- Do it below this comment
-*/
-
-/*
- STEP 2.1.digitalWrite(redLEDPin, HIGH);
-   digitalWrite(yellowLEDPin, HIGH);
-   digitalWrite(greenLEDPin, HIGH);
-   if (code[i] == '.') {
-     delay(DOT_DURATION);
-   } else {
-     delay(DASH_DURATION);
-   }
-   digitalWrite(redLEDPin, LOW);
-   digitalWrite(yellowLEDPin, LOW);
-   digitalWrite(greenLEDPin, LOW);
-   delay(SYMBOL_PAUSE);
- SET pinMode() FOR DECLARED PINS IN
- setup() OR callback() FUNCTION.
- setup() is probably better, but callback() should work too.
-
-
- Go to the setup() function for additional instructions (Examples).
-*/
-
-/*
- STEP 3.
- PROGRAM THE callback() FUNCTION TO USE THE WIRED UP COMPONENTS AS DESIRED.
-
-
- callback() is below.
-*/
 
 void performActionBasedOnPayload(byte *payload, unsigned int length)
 {
  // Blink the payload as Morse code
  Serial.print("Blinking Morse code for: ");
+
  for (int i = 0; i < length; i++) {
    Serial.print((char)payload[i]);
    blinkMorse((char)payload[i]);
+
  }
- Serial.println();
+ Serial.println();  
+ // Implement your action logic here based on the payload
+  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
+  // Add your action code here
+
+  /*
+  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
+
+  if ((char)payload[0] == '1') {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+  } else {
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
+
+  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
+  challenge is completed)
+
+  if ((char)payload[0]) {
+    Serial.println("LED ON");
+    digitalWrite(redLEDPin, HIGH);
+    delay(250);
+    Serial.println("LED OFF");
+    digitalWrite(redLEDPin, LOW);
+  }
+  */
+if ((char)payload[0] == '1') {
+    Serial.println("");
+    digitalWrite(redLEDPin, HIGH);
+  } 
 }
 
 void sendDataToServer(String topic, String message)
@@ -206,12 +130,12 @@ void sendPeriodicUpdate()
    String updateTopic = "updateChallenges/" + String(mqttClient);
   
    // 4. Transmit: Use the helper function to send the data to the broker
-   sendDataToServer(updateTopic, String(blinkMorse('I')));
-   sendDataToServer(updateTopic, String(blinkMorse('N')));
-   sendDataToServer(updateTopic, String(blinkMorse('K')));
-   sendDataToServer(updateTopic, String(blinkMorse('M')));
-   sendDataToServer(updateTopic, String(blinkMorse('A')));
-   sendDataToServer(updateTopic, String(blinkMorse('N')));
+  // sendDataToServer(updateTopic, String(blinkMorse('I')));
+  // sendDataToServer(updateTopic, String(blinkMorse('N')));
+  // sendDataToServer(updateTopic, String(blinkMorse('K')));
+  // sendDataToServer(updateTopic, String(blinkMorse('M')));
+  // sendDataToServer(updateTopic, String(blinkMorse('A')));
+  // sendDataToServer(updateTopic, String(blinkMorse('N')));
  }
 }
 
@@ -258,13 +182,6 @@ void loop()
  sendPeriodicUpdate();
  client.loop(); // Check for incoming messages and keep the connection alive
 }
-
-
-
-
-
-
-
 
 void setup()
 {
@@ -326,15 +243,3 @@ void setup()
 }
 
 // END
-
-
-
-
-
-
-
-
-
-
-
-
