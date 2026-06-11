@@ -5,206 +5,111 @@
   Ensure to only change what is asked, and not to remove any required libraries.
 */
 
-/*
-  This works using the MQTT broker (mosquitto, installed on the CyberRange server), in combination with the database,
-  and the databaseToMQTT.py script, setup as a service on the CyberRange server. The script detects any changes to the
-  'challenges/CurrentOutput' column, and sends them to the broker, using the information from the row of the change
-  in order to send it to the associated topic (challenges/Module).
 
-  This means that, if you register a module on the website with the 'Module' set as 'AnnoyingPeizo'. And write '4' to the
-  'CurrentOutput' of the 'AnnoyingPeizo' row, the script will send to the topic:
 
-  'challenges/AnnoyingPeizo'
+// MQTT client name
+// TODO - Change the name to the specific module name.
+const char* mqttClient = "ESP32DEFAULT"; // This should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc
 
-  The message:
+// MQTT Topic
+const char* mqttTopic; 
 
-  '4'
 
-  That message is sent to the ESP32 subscribed to that topic.
 
-  that topic, is what needs to be put into the 'mqttTopic' const char* inside of sensitiveInformation.h, in order to associate
-  the ESP32 with its respective database row within challenges.
-
-  Example inside of sensitveInformation.h:
-
-  const char* mqttTopic = "challenges/Servo";
-
-  STEP 0.
-  ENSURE THE sensitiveInformation.h FILE IS CONFIGURED CORRECTLY.
-  OPEN THE sensitiveInformation.h FILE AND ENSURE THE FOLLOWING VARIABLES ARE CORRECT:
-  - mqttClient (Should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc)
-  - mqttTopic  (Should match the 'ModuleName' column of the database row for this ESP32)
-  - mqttServer (Should be the IP address of the DEV or PROD server.)
-*/
 
 // REQUIRED LIBRARIES, DONT REMOVE
 #include <Arduino.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "comms.h"
 
-// ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
+// TODO: ADD Libraries Required for specific module.
 
-// Follow the steps:
+
+// TODO: Declare Hardware/Global Variables
+
+
+
 
 /*
-  STEP 1.
-  DECLARE REQUIRED LIBRARIES, e.g:
+  Communication Channels
 
+  There are three channels of communicating information from the ESP32 to the MQTT Broker. 
+  All three channels are taken from the MQTT broker and stored in the database.
 
-  Do it below this comment
+  `sendDataToServer()` is used for all three channels. It requires two arguments - `topic` and `message`.
+
+  Each topic has a keyword, followed by the `mqttClient`, defined abovce
+  For example: "updateChallenges/Windmill".
+
+  `message` is the data to be sent, as a String.
+
+  Channel Keywords:
+
+  // Update the `moduleValue` field in the database by sending to the broker
+  // This can be used to 'reset' the challenge for the next user.
+  // For instance, after a set amount of time, you could reset the moduleValue to 0, which would make the challenge unsolved again until a user solves it and updates the moduleValue to 1.
+  sendDataToServer("updateChallenges/" + String(mqttClient), String(randomNumber));
+
+  // Upload data for the module, which is attached to the challenge. The data shows on the challenge page on the website.
+  // The data can be anything. It could be data used to assist the user with the challenge, or it could be fake data meant to mislead the user. It's up to you to decide how to use it!
+  // When the module data is entered into the database, it will be timestamped.
+  sendDataToServer("moduleData/" + String(mqttClient), String(randomNumber));
+
+  // Upload event logs for the module. Use this field for Debugging.
+  // Log events such as : Module startup, module restarted, resetting the challenge data etc.
+  // When the log is entered into the database, it will be timestamped.
+  sendDataToServer("eventLog/" + String(mqttClient), String(randomNumber));
+
 */
+
+
+
+
 
 /*
-  STEP 2.
-  DECLARE REQUIRED PINS, e.g:
+This function is executed/called when new data has been received from the MQTT broker.
+Customise this function to perform action that is required for this module.
+For example: If the payload is '1', then turn the motor on. If the payload is '0', then turn the motor off.
 
-  #declare redLEDPin 17
-
-  OR
-
-  int redLEDPin = 17; // Red LED pin.
-
-  Do it below this comment
+@params payload: String. The data received from the MQTT broker.
+@return: null
 */
-
-/*
-  STEP 2.1.
-  SET pinMode() FOR DECLARED PINS IN setup() OR callback() FUNCTION.
-  setup() is probably better, but callback() should work too.
-
-  Go to the setup() function for additional instructions (Examples).
-*/
-
-/*
-  STEP 3.
-  PROGRAM THE callback() FUNCTION TO USE THE WIRED UP COMPONENTS AS DESIRED.
-
-  callback() is below.
-*/
-
-void callback(char *topic, byte *payload, unsigned int length)
+void performActionBasedOnPayload(String payload)
 {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++)
-  {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
+  Serial.print("Displaying message on matrix: ");
+  Serial.println(payload);
 
-  performActionBasedOnPayload(payload);
 }
-
-void performActionBasedOnPayload(byte *payload)
-{
-  // Implement your action logic here based on the payload
-  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
-  // Add your action code here
-
-  /*
-  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
-
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
-  challenge is completed)
-
-  if ((char)payload[0]) {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-    delay(250);
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-  */
-}
-
-// Declare the callback function prototype before setup()
-void callback(char *topic, byte *payload, unsigned int length);
-
-// MQTT client setup
-WiFiClient espClient;
-PubSubClient client(espClient);
 
 void setup()
 {
-  /*
-    STEP 3. CONTINUED.
-    DECLARE YOUR pinMode()'s below, e.g:
-
-    pinMode(redLEDPin, OUTPUT);
-  */
-
+  // Seed random number generator using noise from an analog pin
+  randomSeed(analogRead(0));
   Serial.begin(9600);
+  wifiSetup();
+  mqttSetup();
+
   while (!Serial)
   {
     delay(10);
   }
   delay(1000);
 
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
-  Serial.println();
-  Serial.print("Connected to WiFI");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  // Setting up MQTT
-  client.setServer(mqttServer, mqttPort);
-  client.setCallback(callback); // Set the callback function to handle incoming messages
-
-  // Connecting to MQTT Broker
-  while (!client.connected())
-  {
-    Serial.println("Connecting to MQTT...");
-    if (client.connect(mqttClient))
-    {
-      Serial.println("Connected to MQTT");
-      client.subscribe(mqttTopic); // Subscribe to the control topic
-      Serial.println("Connected to topic");
-    }
-    else
-    {
-      Serial.print("Failed with state ");
-      Serial.print(client.state());
-      delay(2000);
-    }
-  }
 }
 
 void loop()
-{ // The loop function likely does not require change in the majority of circumstances.
-  if (!client.connected())
+{
+  // 1. Handle Connection Persistence
+  mqttConnect(); // Ensure we are connected to the MQTT broker. If not, this will attempt to reconnect.
+
+  // 2. Generate and send a random number periodically
+  unsigned long now = millis();
+  if (now - lastUpdate > updateInterval)
   {
-    while (!client.connected())
-    {
-      Serial.println("Reconnecting to MQTT...");
-      if (client.connect(mqttClient))
-      {
-        Serial.println("Reconnected to MQTT");
-        client.subscribe(mqttTopic);
-        Serial.println("Connected to topic");
-      }
-      else
-      {
-        Serial.print("Failed to reconnect, state ");
-        Serial.print(client.state());
-        delay(2000);
-      }
-    }
+    lastUpdate = now;
+
+    // TODO: Upload data to server as required.
+    
   }
+
   client.loop(); // Check for incoming messages and keep the connection alive
 }

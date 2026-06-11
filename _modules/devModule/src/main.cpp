@@ -5,16 +5,27 @@
   Ensure to only change what is asked, and not to remove any required libraries.
 */
 
+
+
+// MQTT client name
+// TODO - Change the name to the specific module name.
+const char* mqttClient = "ESP32DEFAULT"; // This should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc
+
+// MQTT Topic
+const char* mqttTopic; 
+
+
+
+
 // REQUIRED LIBRARIES, DONT REMOVE
 #include <Arduino.h>
 #include "comms.h"
 
-// ADD Libraries Required for specific module.
-#include <Adafruit_GFX.h>
-#include "Adafruit_LEDBackpack.h"
+// TODO: ADD Libraries Required for specific module.
 
-// Hardware setup
-Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
+
+// TODO: Declare Hardware/Global Variables
+
 
 
 
@@ -26,7 +37,7 @@ Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
 
   `sendDataToServer()` is used for all three channels. It requires two arguments - `topic` and `message`.
 
-  Each topic has a keyword, followed by the `mqttClient`, defined in `comms.h`. 
+  Each topic has a keyword, followed by the `mqttClient`, defined abovce
   For example: "updateChallenges/Windmill".
 
   `message` is the data to be sent, as a String.
@@ -67,11 +78,6 @@ void performActionBasedOnPayload(String payload)
   Serial.print("Displaying message on matrix: ");
   Serial.println(payload);
 
-  matrix.setRotation(1);
-  matrix.clear();
-  matrix.setCursor(0, 0);
-  matrix.print(payload);
-  matrix.writeDisplay();
 }
 
 void setup()
@@ -88,7 +94,6 @@ void setup()
   }
   delay(1000);
 
-  matrix.begin(0x70);
 }
 
 void loop()
