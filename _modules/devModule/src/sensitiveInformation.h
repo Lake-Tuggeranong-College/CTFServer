@@ -13,17 +13,6 @@
 
 
 // Wifi network
-const char* ssid = "CyberRange";       // Wifi Network Name
-const char* password = "CyberRange";  // Wifi Password
+const char* ssid = "gogogadgetnodes";       // Wifi Network Name
+const char* password = "st@rw@rs";  // Wifi Password
 
-// MQTT client name
-const char* mqttClient = "Windmill"; // This should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc
-
-// MQTT Topic
-// const char* mqttTopic = "challenges/Windmill"; // It's worth noting that an ESP32 can subscribe to more than 1 topic
-const char* mqttTopic; 
-
-
-// Replace with the MQTT broker IP address and port (default port for MQTT is 1883)
-const char* mqttServer = "192.168.1.116";  
-const int mqttPort = 1883;

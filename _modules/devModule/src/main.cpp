@@ -5,177 +5,101 @@
   Ensure to only change what is asked, and not to remove any required libraries.
 */
 
+
+
+// MQTT client name
+// TODO - Change the name to the specific module name.
+const char* mqttClient = "ESP32DEFAULT"; // This should be unique for each ESP32, e.g: "ESP32_Servo", "ESP32_Piezo", etc
+
+// MQTT Topic
+const char* mqttTopic; 
+
+
+
+
 // REQUIRED LIBRARIES, DONT REMOVE
 #include <Arduino.h>
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include "sensitiveInformation.h" // ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
+#include "comms.h"
 
-#include <Adafruit_GFX.h>
-#include "Adafruit_LEDBackpack.h"
+// TODO: ADD Libraries Required for specific module.
 
-// Hardware setup
-Adafruit_8x16minimatrix matrix = Adafruit_8x16minimatrix();
 
-// Global variables for topic and timing
-String topicBuffer;
-unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+// TODO: Declare Hardware/Global Variables
 
-// MQTT client setup
-WiFiClient espClient;
-PubSubClient client(espClient);
 
 
 
 /*
-  Use this to send data back to the MQTT broker.
-  Example usage: sendDataToServer("challenges/Status", "Task Completed");
+  Communication Channels
+
+  There are three channels of communicating information from the ESP32 to the MQTT Broker. 
+  All three channels are taken from the MQTT broker and stored in the database.
+
+  `sendDataToServer()` is used for all three channels. It requires two arguments - `topic` and `message`.
+
+  Each topic has a keyword, followed by the `mqttClient`, defined abovce
+  For example: "updateChallenges/Windmill".
+
+  `message` is the data to be sent, as a String.
+
+  Channel Keywords:
+
+  // Update the `moduleValue` field in the database by sending to the broker
+  // This can be used to 'reset' the challenge for the next user.
+  // For instance, after a set amount of time, you could reset the moduleValue to 0, which would make the challenge unsolved again until a user solves it and updates the moduleValue to 1.
+  sendDataToServer("updateChallenges/" + String(mqttClient), String(randomNumber));
+
+  // Upload data for the module, which is attached to the challenge. The data shows on the challenge page on the website.
+  // The data can be anything. It could be data used to assist the user with the challenge, or it could be fake data meant to mislead the user. It's up to you to decide how to use it!
+  // When the module data is entered into the database, it will be timestamped.
+  sendDataToServer("moduleData/" + String(mqttClient), String(randomNumber));
+
+  // Upload event logs for the module. Use this field for Debugging.
+  // Log events such as : Module startup, module restarted, resetting the challenge data etc.
+  // When the log is entered into the database, it will be timestamped.
+  sendDataToServer("eventLog/" + String(mqttClient), String(randomNumber));
+
 */
-void sendDataToServer(String topic, String message)
-{
-  if (client.connected())
-  {
-    Serial.print("Sending message to topic [");
-    Serial.print(topic);
-    Serial.print("]: ");
-    Serial.println(message);
 
-    // Convert String to char array for the PubSubClient library
-    client.publish(topic.c_str(), message.c_str());
-  }
-  else
-  {
-    Serial.println("Send failed: MQTT not connected.");
-  }
-}
 
-void sendPeriodicUpdate()
-{
-  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
-  unsigned long now = millis();
-  if (now - lastUpdate > updateInterval)
-  {
-    lastUpdate = now; // Reset the timer
-    
-    // --- Next steps will go here ---
-        // 2. Data: Generate a random "sensor" value between 0 and 100,000
-    long randomNumber = random(0, 100001);
-        // 3. Topic: Construct the special update topic
-    // We use "updateChallenges/" so the server knows this is incoming data
-    String updateTopic = "moduleData/" + String(mqttClient);
-    
-    // 4. Transmit: Use the helper function to send the data to the broker
-    sendDataToServer(updateTopic, String(randomNumber));
-  }
-}
 
+
+
+/*
+This function is executed/called when new data has been received from the MQTT broker.
+Customise this function to perform action that is required for this module.
+For example: If the payload is '1', then turn the motor on. If the payload is '0', then turn the motor off.
+
+@params payload: String. The data received from the MQTT broker.
+@return: null
+*/
 void performActionBasedOnPayload(String payload)
 {
   Serial.print("Displaying message on matrix: ");
   Serial.println(payload);
 
-  matrix.setRotation(1);
-  matrix.clear();
-  matrix.setCursor(0, 0);
-  matrix.print(payload);
-  matrix.writeDisplay();
-}
-
-void callback(char *topic, byte *payload, unsigned int length)
-{
-  String message = "";
-  for (int i = 0; i < length; i++)
-  {
-    message += (char)payload[i];
-  }
-
-  String internalPrefix = "__INTERNAL__";
-  if (message.startsWith(internalPrefix)) 
-  {
-    message = message.substring(internalPrefix.length());
-  }
-
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  Serial.println(message);
-
-  performActionBasedOnPayload(message);
 }
 
 void setup()
 {
   // Seed random number generator using noise from an analog pin
   randomSeed(analogRead(0));
-
-  // Construct the MQTT topic dynamically
-  topicBuffer = "challenges/" + String(mqttClient);
-  mqttTopic = topicBuffer.c_str();
-
   Serial.begin(9600);
+  wifiSetup();
+  mqttSetup();
+
   while (!Serial)
   {
     delay(10);
   }
   delay(1000);
 
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
-  Serial.println();
-  Serial.print("Connected to WiFI. IP address: ");
-  Serial.println(WiFi.localIP());
-
-  client.setServer(mqttServer, mqttPort);
-  client.setCallback(callback);
-
-  // Connecting to MQTT Broker
-  while (!client.connected())
-  {
-    Serial.println("Connecting to MQTT...");
-    if (client.connect(mqttClient))
-    {
-      Serial.println("Connected to MQTT");
-      client.subscribe(mqttTopic);
-      sendDataToServer("EventLog", String(mqttClient) + " is online.");
-    }
-    else
-    {
-      Serial.print("Failed with state ");
-      Serial.print(client.state());
-      delay(2000);
-    }
-  }
-
-  matrix.begin(0x70);
 }
 
 void loop()
-{ 
+{
   // 1. Handle Connection Persistence
-  if (!client.connected())
-  {
-    while (!client.connected())
-    {
-      Serial.println("Reconnecting to MQTT...");
-      if (client.connect(mqttClient))
-      {
-        Serial.println("Reconnected to MQTT");
-        client.subscribe(mqttTopic);
-      }
-      else
-      {
-        Serial.print("Failed to reconnect, state ");
-        Serial.print(client.state());
-        delay(2000);
-      }
-    }
-  }
+  mqttConnect(); // Ensure we are connected to the MQTT broker. If not, this will attempt to reconnect.
 
   // 2. Generate and send a random number periodically
   unsigned long now = millis();
@@ -183,17 +107,8 @@ void loop()
   {
     lastUpdate = now;
 
-    // Generate random number between 0 and 100,000
-    long randomNumber = random(0, 100001);
+    // TODO: Upload data to server as required.
     
-    // Construct the update topic (e.g., updateChallenges/Windmill)
-    String updateTopic = "updateChallenges/" + String(mqttClient);
-    
-    // Send the random number to the server
-    sendDataToServer(updateTopic, String(randomNumber));
-    
-    // Optional: Log to ModuleData
-    // sendDataToServer("ModuleData", String(mqttClient) + "," + String(randomNumber));
   }
 
   client.loop(); // Check for incoming messages and keep the connection alive
