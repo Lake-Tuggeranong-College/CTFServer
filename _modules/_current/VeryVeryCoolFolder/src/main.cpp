@@ -72,10 +72,241 @@
 
 #define redLEDPin 13
 
+
+int a=7; //segment a
+int b=6; //segment b
+int c=5; //segment c
+int d=11; //segment d
+int e=10; //segment e
+int f=8; //segment f
+int g=9; //segment g
+int dp=4; //decimal point
+
+//durations for displaying numbers and between them in milliseconds, can be changed as desired
+int display_duration = 2500; //duration for which each number is displayed
+int between_duration = 500; //duration between numbers, when the display is cleared
+int loop_duration = 3000; //duration to wait before between loops of the sequence
+
+int sequence[] = {1,2,3,4,5,6,7,8,9,0}; //sequence of numbers to display, change to match the purpose of the challenge
+int sequence_index = 0; //index to keep track of the current position in the sequence
+bool solved = false; //boolean to track if the challenge is solved
+
 // Global variables for topic and timing
 String topicBuffer;
 unsigned long lastUpdate = 0;
 const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+
+// clear display
+void clearDisplay(void) 
+{
+  Serial.println("Clearing display"); //debug message. Comment out if not needed.
+  digitalWrite(a,LOW);
+  digitalWrite(b,LOW);
+
+  digitalWrite(g,LOW);
+  digitalWrite(c,LOW);
+  digitalWrite(d,LOW);  
+
+  digitalWrite(e,LOW);  
+  digitalWrite(f,LOW);  
+} 
+
+//display number 1
+void display1(void) 
+{
+  clearDisplay();
+  digitalWrite(b,HIGH);
+  digitalWrite(c,HIGH);
+} 
+
+//display number2
+void display2(void) 
+{
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(b,HIGH);
+
+  digitalWrite(g,HIGH);
+  digitalWrite(e,HIGH);
+  digitalWrite(d,HIGH);
+}
+  
+// display number3
+void display3(void) 
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+
+  digitalWrite(b,HIGH);
+    
+  digitalWrite(c,HIGH);
+  digitalWrite(d,HIGH);
+
+  digitalWrite(g,HIGH);
+} 
+
+// display number4
+void display4(void) 
+{
+  clearDisplay();
+  digitalWrite(f,HIGH);
+  digitalWrite(b,HIGH);
+  digitalWrite(g,HIGH);
+
+  digitalWrite(c,HIGH);
+  
+} 
+
+// display number5
+void display5(void)
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(f,HIGH);
+  digitalWrite(g,HIGH);
+
+  digitalWrite(c,HIGH);
+  digitalWrite(d,HIGH);
+} 
+
+// display number6
+void
+  display6(void) 
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(f,HIGH);
+
+  digitalWrite(g,HIGH);
+  digitalWrite(c,HIGH);
+  digitalWrite(d,HIGH);
+  
+  digitalWrite(e,HIGH);  
+} 
+
+// display number7
+void display7(void)
+{   
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(b,HIGH);
+  digitalWrite(c,HIGH);
+}
+  
+// display number8
+void display8(void) 
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+
+  digitalWrite(b,HIGH);
+  digitalWrite(g,HIGH);
+  digitalWrite(c,HIGH);
+
+  digitalWrite(d,HIGH);  
+  digitalWrite(e,HIGH);  
+  digitalWrite(f,HIGH);
+  
+} 
+
+// display number9
+void display9(void)
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(b,HIGH);
+  digitalWrite(g,HIGH);
+
+  digitalWrite(c,HIGH);
+  digitalWrite(d,HIGH);  
+  digitalWrite(f,HIGH);
+  
+} 
+
+// display number0
+void display0(void) 
+{ 
+  clearDisplay();
+  digitalWrite(a,HIGH);
+  digitalWrite(b,HIGH);
+
+  digitalWrite(c,HIGH);
+  digitalWrite(d,HIGH);  
+  digitalWrite(e,HIGH);
+  
+  digitalWrite(f,HIGH);  
+} 
+
+
+int displayNumber(int number)
+{
+  switch (number) {
+    case 0:
+      display0();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 1:
+      display1();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 2:
+      display2();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 3:
+      display3();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 4:
+      display4();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 5:
+      display5();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 6:
+      display6();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 7:
+      display7();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 8:
+      display8();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    case 9:
+      display9();
+      delay(display_duration);
+      clearDisplay();
+      delay(between_duration);
+      break;
+    default:
+      Serial.println("Invalid number for display");
+  }
+  return number; //the returned number is not used in the current implementation, but may be useful for extensions of the functionality
+}
+
 
 /*
   STEP 2.1.
@@ -127,9 +358,11 @@ void performActionBasedOnPayload(byte *payload)
   if ((char)payload[0] == '1') {
     Serial.println("LED ON");
     digitalWrite(redLEDPin, HIGH);
+    solved = true;
   } else {
     Serial.println("LED OFF");
     digitalWrite(redLEDPin, LOW);
+    solved = false;
   }
 }
 
@@ -156,6 +389,27 @@ void callback(char *topic, byte *payload, unsigned int length)
 WiFiClient espClient;
 PubSubClient client(espClient);
 
+
+void loopSequence()
+{
+  if (!solved) {
+    //display the current number in the sequence while the challenge is not solved
+
+    if (sequence_index >= sizeof(sequence) / sizeof(sequence[0])) {
+      //return to the beginning of the sequence after reaching the end, and wait for a while before starting the next loop
+      delay(loop_duration);
+      sequence_index = 0; // Reset to the beginning of the sequence
+    }
+
+    displayNumber(sequence[sequence_index]); //display the current number in the sequence
+    sequence_index++; //move to the next number in the sequence for the next loop
+
+  } else {
+    delay(500);
+  }
+}
+
+
 void setup()
 {
   /*
@@ -164,6 +418,12 @@ void setup()
 
     pinMode(redLEDPin, OUTPUT);
   */
+
+    for(int i=4;i<=11;i++)
+    {
+      //set all the pins for the 7-segment display as OUTPUT
+      pinMode(i,OUTPUT);
+    }
 
   Serial.begin(9600);
   while (!Serial)
@@ -279,6 +539,8 @@ void loop()
   // We call our function here so it checks the timer every single loop
   sendPeriodicUpdate();
 
+  loopSequence(); // Call the function to handle the number sequence display
+  
   client.loop(); // Check for incoming messages and keep the connection alive
 }
 
