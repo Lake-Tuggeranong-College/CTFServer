@@ -47,6 +47,7 @@
 String topicBuffer;
 unsigned long lastUpdate = 0;
 const unsigned long updateInterval = 5000;
+const String challengePassword = "THEPASSWORD"
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -172,9 +173,8 @@ void sendPeriodicUpdate()
   if (now - lastUpdate > updateInterval)
   {
     lastUpdate = now;
-    long randomNumber = random(0, 100001);
     String updateTopic = "updateChallenges/" + String(mqttClient);
-    sendDataToServer(updateTopic, String(randomNumber));
+    sendDataToServer(updateTopic, challengePassword);
 
 
   }
