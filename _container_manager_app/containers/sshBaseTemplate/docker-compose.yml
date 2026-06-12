@@ -1,0 +1,7 @@
+services:
+  sshtest-server:
+    build: .
+    ports:
+      - "${PORT}:22" # OUTSIDE:INSIDE
+    container_name: sshBaseTemplate
+    restart: unless-stopped

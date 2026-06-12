@@ -1,0 +1,8 @@
+services: 
+
+  BACTA-daemon:
+    build: .
+    image: bacta-web
+    container_name: bacta-web
+    ports:
+     - "${PORT}:6500"
