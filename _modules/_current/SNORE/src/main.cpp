@@ -43,7 +43,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
-#include "Adafruit_ADT7410.h"
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -62,9 +61,6 @@
 String topicBuffer;
 unsigned long lastUpdate = 0;
 const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
-
-// Temperature sensor object
-Adafruit_ADT7410 adt = Adafruit_ADT7410();
 
 #define redLEDPin 13
 
@@ -160,32 +156,12 @@ void sendDataToServer(String topic, String message)
 { 
   if (client.connected())
   {
-    // Try to parse the message as a temperature
-    float temp = message.toFloat();
-    String status;
-
-    // Decide status based on temperature thresholds
-    if (message.length() == 0) {
-      status = "No data";
-    } else if (temp > 30.0) {
-      status = "This is a message from the vault, try decrypting it: 36,14,28,83,31,0,6";
-    } else if (temp > 20.0) {
-      status = "This is a message from the vault, try decrypting it: 57,21,83,26,4,79,5,5,2,12";
-    } else {
-      status = "This is a message from the vault, try decrypting it: 36,14,28,83,20,0,30,0";
-    }
-
     Serial.print("Sending message to topic [");
     Serial.print(topic);
     Serial.print("]: ");
     Serial.println(message);
 
-    Serial.print("Status: ");
-    Serial.println(status);
-
-    // Publish a combined payload (temperature + status)
-    String payload = message + " - " + status;
-    client.publish(topic.c_str(), payload.c_str());
+    client.publish(topic.c_str(), message.c_str());
   }
   else
   {
@@ -199,9 +175,8 @@ void sendPeriodicUpdate()
   if (now - lastUpdate > updateInterval)
   {
     lastUpdate = now; // Reset the timer
-    float temp = adt.readTempC();
     String updateTopic = "updateChallenges/" + String(mqttClient);
-    sendDataToServer(updateTopic, String(temp));
+    sendDataToServer(updateTopic, "heartbeat");
   }
 }
 
@@ -221,14 +196,6 @@ void setup()
     delay(10);
   }
   delay(1000);
-
-  if (!adt.begin()) {
-    Serial.println("Failed to initialize ADT7410 sensor!");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("ADT7410 sensor initialized successfully");
 
   WiFi.begin(ssid, password);
 
