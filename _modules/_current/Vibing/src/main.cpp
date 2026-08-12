@@ -22,6 +22,7 @@ PubSubClient client(espClient);
 #define redLEDPin 16
 #define yellowLEDPin 17
 #define greenLEDPin 15
+bool challengeComplete = false;
 
 char* morseCode[26] = {
  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
@@ -54,7 +55,7 @@ char* blinkMorse(char letter) {
 void performActionBasedOnPayload(byte *payload, unsigned int length)
 {
  // Blink the payload as Morse code
- Serial.print("Blinking Morse code for: ");
+ Serial.println("Blinking Morse code for: ");
 
  for (int i = 0; i < length; i++) {
    Serial.print((char)payload[i]);
@@ -127,14 +128,10 @@ void sendPeriodicUpdate()
    // --- Next steps will go here ---
      // 3. Topic: Construct the special update topic
    // We use "updateChallenges/" so the server knows this is incoming data
-   String updateTopic = "updateChallenges/" + String(mqttClient);
+   String updateTopic = "updateChallenges/" + String("morseCode");
   
    // 4. Transmit: Use the helper function to send the data to the broker
   sendDataToServer(updateTopic, String(blinkMorse('I')));
-  sendDataToServer(updateTopic, String(blinkMorse('N')));
-  sendDataToServer(updateTopic, String(blinkMorse('K')));
-  sendDataToServer(updateTopic, String(blinkMorse('M')));
-  sendDataToServer(updateTopic, String(blinkMorse('A')));
   sendDataToServer(updateTopic, String(blinkMorse('N')));
  }
 }
