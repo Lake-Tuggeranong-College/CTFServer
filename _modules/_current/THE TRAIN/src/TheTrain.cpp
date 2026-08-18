@@ -153,9 +153,12 @@ Serial.println("detected change");
     Serial.println("HALT");
     currentStatus = "STOPPED";
     updateDisplay(currentStatus, "Emergency brake activated");
-    step(RED, PWM_BRK, 0);
-    delay(2000);
-    step(RED, PWM_BRK, 0);
+    while ((char)payload[0] == '0')
+    {
+      step(RED, PWM_BRK, 0);
+      delay(2000);
+    }
+    
   } 
   // "1" = Enable normal mode (accelerate at speed 3)
   else if ((char)payload[0] == '1') {
