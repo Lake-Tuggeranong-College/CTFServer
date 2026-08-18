@@ -153,11 +153,6 @@ Serial.println("detected change");
     Serial.println("HALT");
     currentStatus = "STOPPED";
     updateDisplay(currentStatus, "Emergency brake activated");
-    step(RED, PWM_BRK, 0);
-    delay(2000);
-    step(RED, PWM_BRK, 0);
-    delay(2000);
-    step(RED, PWM_BRK, 0);
     while ((char)payload[0] == '0')
     {
       step(RED, PWM_BRK, 0);
