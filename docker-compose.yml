@@ -6,7 +6,7 @@ services:
     container_name: CTF-PHPWebserver
     image: php:8.5-apache
     ports:
-      - "81:80"
+      - "80:80"
     volumes:
       # 1. Mount the entire root of the project to /workspace.
       # When VS Code attaches, it will see the root folder structure.
@@ -54,7 +54,7 @@ services:
       MYSQL_ROOT_PASSWORD: CTFRootPassw0rd
       PMA_PORT: 3306
     ports:
-      - "8081:80"
+      - "1081:80"
     depends_on:
       - mysql
     networks:
@@ -127,7 +127,7 @@ services:
     container_name: CTF-Docs
     working_dir: /app
     ports:
-      - "8001:3000"
+      - "1082:3000"
     volumes:
       - ./_docs:/app
     command: >

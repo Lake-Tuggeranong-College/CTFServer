@@ -3,6 +3,35 @@ services:
   Challenge-web:
     build: .
     image: php:8.2-apache
-    container_name: Challenge-php_apache
+    container_name: Secret-php_apache
     ports:
       - "${PORT}:80"
+
+  Secret-db:
+    image: mariadb:latest
+    container_name: Secret-db
+    restart: always
+    environment: 
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: secret
+      MYSQL_USER: secret
+      MYSQL_PASSWORD: secret
+    volumes:
+      - Secret-db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  Secret-phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: Secret-phpmyadmin
+    environment:
+      PMA_HOST: Secret-db
+      MYSQL_ROOT_PASSWORD: password
+      PMA_PORT: 3306
+    ports:
+      - "8081:80"
+    depends_on:
+      - Secret-db
+
+volumes:
+  Secret-db_data: 
