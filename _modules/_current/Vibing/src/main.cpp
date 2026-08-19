@@ -9,7 +9,7 @@
 
 String topicBuffer;
 unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 5000; // Time between random number updates (5 seconds)
+const unsigned long updateInterval = 7000; // Time between random number updates (5 seconds)
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -23,11 +23,15 @@ PubSubClient client(espClient);
 #define yellowLEDPin 17
 #define greenLEDPin 15
 
+bool challengeComplete = false;
+
+
 char* morseCode[26] = {
  ".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."
 };
 
 // Function to blink Morse code for a letter
+
 char* blinkMorse(char letter) {
  int index = toupper(letter) - 'A';
  if (index < 0 || index > 25) return NULL; // Ignore non-letters
@@ -54,32 +58,34 @@ char* blinkMorse(char letter) {
 void performActionBasedOnPayload(byte *payload, unsigned int length)
 {
  // Blink the payload as Morse code
- Serial.print("Blinking Morse code for: ");
+//  Serial.println("Blinking Morse code for: ");
 
- for (int i = 0; i < length; i++) {
-   Serial.print((char)payload[i]);
-   blinkMorse((char)payload[i]);
+//  for (int i = 0; i < length; i++) {
+//    Serial.print((char)payload[i]);
+//    blinkMorse((char)payload[i]);
 
- }
- Serial.println();  
+//  }
+//  Serial.println();  
  // Implement your action logic here based on the payload
-  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
+  // For exspample, if the payload represents a number, you could convert it and use it to control a motor eed
   // Add your action code here
 
-  /*
-  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
+  
+  //Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
 
   if ((char)payload[0] == '1') {
     Serial.println("LED ON");
     digitalWrite(redLEDPin, HIGH);
+    challengeComplete = true;
   } else {
     Serial.println("LED OFF");
     digitalWrite(redLEDPin, LOW);
+    challengeComplete = false;
   }
 
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
-  challenge is completed)
-
+  //Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
+  //challenge is completed)
+/*
   if ((char)payload[0]) {
     Serial.println("LED ON");
     digitalWrite(redLEDPin, HIGH);
@@ -87,11 +93,11 @@ void performActionBasedOnPayload(byte *payload, unsigned int length)
     Serial.println("LED OFF");
     digitalWrite(redLEDPin, LOW);
   }
-  */
+  
 if ((char)payload[0] == '1') {
     Serial.println("");
     digitalWrite(redLEDPin, HIGH);
-  } 
+  } */
 }
 
 void sendDataToServer(String topic, String message)
@@ -115,7 +121,9 @@ void sendDataToServer(String topic, String message)
  }
 }
 
+
 void sendPeriodicUpdate()
+
 {
  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
  unsigned long now = millis();
@@ -123,19 +131,18 @@ void sendPeriodicUpdate()
  {
    lastUpdate = now; // Reset the timer
    // 2. Data: Generate a random "sensor" value between 0 and 100,000
-   long randomNumber = random(0, 100001);
    // --- Next steps will go here ---
      // 3. Topic: Construct the special update topic
    // We use "updateChallenges/" so the server knows this is incoming data
-   String updateTopic = "updateChallenges/" + String(mqttClient);
+   String updateTopic = "updateChallenges/" + String("morseCode");
   
    // 4. Transmit: Use the helper function to send the data to the broker
-  sendDataToServer(updateTopic, String(blinkMorse('I')));
-  sendDataToServer(updateTopic, String(blinkMorse('N')));
-  sendDataToServer(updateTopic, String(blinkMorse('K')));
-  sendDataToServer(updateTopic, String(blinkMorse('M')));
-  sendDataToServer(updateTopic, String(blinkMorse('A')));
-  sendDataToServer(updateTopic, String(blinkMorse('N')));
+   if (!challengeComplete) {
+     sendDataToServer(updateTopic, String(blinkMorse('I')));
+     sendDataToServer(updateTopic, String(blinkMorse('N')));
+   } else {
+     Serial.println("Challenge completed");
+   }
  }
 }
 
@@ -152,6 +159,7 @@ void callback(char *topic, byte *payload, unsigned int length)
  for (int i = 0; i < length; i++)
  {
    Serial.print((char)payload[i]);
+
  }
  Serial.println();
 
