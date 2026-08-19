@@ -43,7 +43,6 @@
 #include <PubSubClient.h>
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
 
-// TEST TEST TEST
 
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
@@ -83,6 +82,8 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 #define trafficGREEN 33
 
 int trafficlightSPEED = 3000;
+int trafficlightBOOLEANSWITCHOFF = 5000;
+int TimeToSlowDown = 0;
 int currentPhase = 0;
 unsigned long previousMillis = 0;
 unsigned long interval = trafficlightSPEED;
@@ -237,6 +238,23 @@ void trafficlightCYCLE()
     }
   }
 }
+
+
+void trafficlightSLOWDOWN(byte *payload)
+{
+  unsigned long currentMillis = millis();
+
+  // Check if it is time to change the light
+  if (currentMillis - previousMillis >= trafficlightBOOLEANSWITCHOFF) {
+    previousMillis = currentMillis; // Reset the stopwatch
+    TimeToSlowDown = 1;
+  if ((char)payload[0] == '1');
+    if ((TimeToSlowDown) == '1');
+      ((char)payload[0] == '0');
+      ((TimeToSlowDown) == '0');
+  }
+}
+
 
 void setup()
 {
