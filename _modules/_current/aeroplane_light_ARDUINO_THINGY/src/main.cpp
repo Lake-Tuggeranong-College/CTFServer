@@ -249,9 +249,12 @@ void trafficlightSLOWDOWN(byte *payload)
     previousMillis = currentMillis; // Reset the stopwatch
     TimeToSlowDown = 1;
   if ((char)payload[0] == '1');
+    interval = trafficlightBOOLEANSWITCHOFF;
     if ((TimeToSlowDown) == '1');
       ((char)payload[0] == '0');
+      interval = trafficlightBOOLEANSWITCHOFF;
       ((TimeToSlowDown) == '0');
+
   }
 }
 
