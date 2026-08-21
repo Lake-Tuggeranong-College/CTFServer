@@ -201,7 +201,7 @@ void sendPeriodicUpdate()
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
-    //sendDataToServer(updateTopic, String("metadata"));
+    sendDataToServer(updateTopic, String("0"));
     // --- Next steps will go here ---
   }
 }
@@ -238,6 +238,7 @@ void trafficlightCYCLE()
     }
   }
 }
+
 
 
 void trafficlightSLOWDOWN(byte *payload)
