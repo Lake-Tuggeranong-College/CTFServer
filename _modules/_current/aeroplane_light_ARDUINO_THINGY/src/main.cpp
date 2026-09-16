@@ -81,6 +81,7 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 #define trafficYELLOW 27
 #define trafficGREEN 33
 
+
 int trafficlightSPEED = 3000;
 int trafficlightBOOLEANSWITCHOFF = 5000;
 int TimeToSlowDown = 0;
@@ -188,7 +189,7 @@ void sendPeriodicUpdate()
 {
   // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
   unsigned long now = millis();
-  if (now - lastUpdate > updateInterval)
+  if (now - lastUpdate >= updateInterval)
   {
     lastUpdate = now; // Reset the timer
     
@@ -201,10 +202,20 @@ void sendPeriodicUpdate()
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
-    sendDataToServer(updateTopic, String("0"));
+    // THIS THING isn't letting the challenge module value be updated to a "1".
+     // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
+  
+      // sendDataToServer(updateTopic, String("0"));
+   
     // --- Next steps will go here ---
   }
+
+  delay(5000);
+  String updateTopic = "updateChallenges/" + String(mqttClient);
+  sendDataToServer(updateTopic, String("0")); 
 }
+
+
 
 
 void trafficlightCYCLE()
@@ -241,23 +252,23 @@ void trafficlightCYCLE()
 
 
 
-void trafficlightSLOWDOWN(byte *payload)
-{
-  unsigned long currentMillis = millis();
+//void trafficlightSLOWDOWN(byte *payload)
+//{
+ // unsigned long currentMillis = millis();
 
   // Check if it is time to change the light
-  if (currentMillis - previousMillis >= trafficlightBOOLEANSWITCHOFF) {
-    previousMillis = currentMillis; // Reset the stopwatch
-    TimeToSlowDown = 1;
-  if ((char)payload[0] == '1');
-    interval = trafficlightBOOLEANSWITCHOFF;
-    if ((TimeToSlowDown) == '1');
-      ((char)payload[0] == '0');
-      interval = trafficlightBOOLEANSWITCHOFF;
-      ((TimeToSlowDown) == '0');
+  //if (currentMillis - previousMillis >= trafficlightBOOLEANSWITCHOFF) {
+  //  previousMillis = currentMillis; // Reset the stopwatch
+  //  TimeToSlowDown = 1;
+ // if ((char)payload[0] == '1');
+  //  interval = trafficlightBOOLEANSWITCHOFF;                          
+  //  if ((TimeToSlowDown) == '1');
+  //    ((char)payload[0] == '0');
+  //    interval = trafficlightBOOLEANSWITCHOFF;
+  //    ((TimeToSlowDown) == '0');
 
-  }
-}
+ // }
+//}
 
 
 void setup()
