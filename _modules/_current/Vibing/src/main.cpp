@@ -130,12 +130,12 @@ void sendPeriodicUpdate()
    String updateTopic = "updateChallenges/" + String(mqttClient);
   
    // 4. Transmit: Use the helper function to send the data to the broker
-  // sendDataToServer(updateTopic, String(blinkMorse('I')));
-  // sendDataToServer(updateTopic, String(blinkMorse('N')));
-  // sendDataToServer(updateTopic, String(blinkMorse('K')));
-  // sendDataToServer(updateTopic, String(blinkMorse('M')));
-  // sendDataToServer(updateTopic, String(blinkMorse('A')));
-  // sendDataToServer(updateTopic, String(blinkMorse('N')));
+  sendDataToServer(updateTopic, String(blinkMorse('I')));
+  sendDataToServer(updateTopic, String(blinkMorse('N')));
+  sendDataToServer(updateTopic, String(blinkMorse('K')));
+  sendDataToServer(updateTopic, String(blinkMorse('M')));
+  sendDataToServer(updateTopic, String(blinkMorse('A')));
+  sendDataToServer(updateTopic, String(blinkMorse('N')));
  }
 }
 
