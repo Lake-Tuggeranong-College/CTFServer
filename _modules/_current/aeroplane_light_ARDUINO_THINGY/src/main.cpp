@@ -44,7 +44,6 @@
 #include "sensitiveInformation.h" //ENSURE WIFI & MQTT IS CONFIGURED CORRECTLY
 
 
-
 // ANY MISSING LIBRARIES SHOULD BE ADDED TO THIS PLATFORMIO PROJECT USING: PLATFORMIO HOME > LIBRARIES
 
 // Global variables for topic and timing
@@ -83,6 +82,8 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 #define trafficGREEN 33
 
 int trafficlightSPEED = 3000;
+int trafficlightBOOLEANSWITCHOFF = 5000;
+int TimeToSlowDown = 0;
 int currentPhase = 0;
 unsigned long previousMillis = 0;
 unsigned long interval = trafficlightSPEED;
@@ -200,7 +201,7 @@ void sendPeriodicUpdate()
     String updateTopic = "updateChallenges/" + String(mqttClient);
     
     // 4. Transmit: Use the helper function to send the data to the broker
-    //sendDataToServer(updateTopic, String("metadata"));
+    sendDataToServer(updateTopic, String("0"));
     // --- Next steps will go here ---
   }
 }
@@ -237,6 +238,27 @@ void trafficlightCYCLE()
     }
   }
 }
+
+
+
+void trafficlightSLOWDOWN(byte *payload)
+{
+  unsigned long currentMillis = millis();
+
+  // Check if it is time to change the light
+  if (currentMillis - previousMillis >= trafficlightBOOLEANSWITCHOFF) {
+    previousMillis = currentMillis; // Reset the stopwatch
+    TimeToSlowDown = 1;
+  if ((char)payload[0] == '1');
+    interval = trafficlightBOOLEANSWITCHOFF;
+    if ((TimeToSlowDown) == '1');
+      ((char)payload[0] == '0');
+      interval = trafficlightBOOLEANSWITCHOFF;
+      ((TimeToSlowDown) == '0');
+
+  }
+}
+
 
 void setup()
 {
