@@ -9,7 +9,7 @@
 
 String topicBuffer;
 unsigned long lastUpdate = 0;
-const unsigned long updateInterval = 7000; // Time between random number updates (5 seconds)
+const unsigned long updateInterval = 25000; // Time between random number updates (5 seconds)
 // MQTT client setup
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -139,6 +139,10 @@ void sendPeriodicUpdate()
    // 4. Transmit: Use the helper function to send the data to the broker
    if (!challengeComplete) {
      sendDataToServer(updateTopic, String(blinkMorse('I')));
+     sendDataToServer(updateTopic, String(blinkMorse('N')));
+     sendDataToServer(updateTopic, String(blinkMorse('K')));
+     sendDataToServer(updateTopic, String(blinkMorse('M')));
+     sendDataToServer(updateTopic, String(blinkMorse('A')));
      sendDataToServer(updateTopic, String(blinkMorse('N')));
    } else {
      Serial.println("Challenge completed");
