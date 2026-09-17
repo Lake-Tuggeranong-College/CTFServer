@@ -131,9 +131,7 @@ services:
     volumes:
       - ./_docs:/app
     command: >
-      sh -c "npm install -g docsify-cli && 
-             node setup.js && 
-             docsify serve ."
+      sh -c "npm install -g http-server && node setup.js && http-server -p 3000 -c-1 ."
 
 volumes:
   mysql-data:
