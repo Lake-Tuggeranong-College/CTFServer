@@ -53,6 +53,7 @@
 * [ALARMANOMALY](alarmAnomaly.md)
 * [HOWTOPLAY](howToPlay.md)
 * [MANUAL](manual.md)
+* [NETWORKING ANONYMOUS HOST](networking-Anonymous-Host.md)
 * [README](readme.md)
 * [TEMPLATE WINDMILL](template-windmill.md)
 * [WELCOME](welcome.md)
