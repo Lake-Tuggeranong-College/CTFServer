@@ -559,7 +559,7 @@ $flash = take_flash();
                             <li><h6 class="dropdown-header text-uppercase"><i class="bi bi-cpu-fill me-2"></i>Virtual Nodes</h6></li>
                             <?php
                             try {
-                                $stmt = $conn->query("SELECT project_id, project_name FROM CyberCity.Projects");
+                                $stmt = $conn->query("SELECT project_id, project_name FROM CyberCity.Projects WHERE enabled=1");
                                 while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                                     echo '<li><a class="dropdown-item rounded" href="' . BASE_URL . 'pages/challenges/challengesList.php?projectID=' . $row['project_id'] . '"><i class="bi bi-chevron-right text-muted"></i> ' . htmlspecialchars($row['project_name']) . '</a></li>';
                                 }
