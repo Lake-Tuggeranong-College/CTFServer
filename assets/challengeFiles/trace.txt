@@ -1,0 +1,28 @@
+192.168.1.105 - - [18/Sep/2026:10:15:32] "GET /login.php HTTP/1.1" 200 4521
+192.168.1.105 - - [18/Sep/2026:10:15:35] "POST /login.php HTTP/1.1" 302 -
+192.168.1.105 - - [18/Sep/2026:10:15:36] "GET /dashboard.html HTTP/1.1" 200 12045
+10.0.0.42 - - [18/Sep/2026:10:16:01] "GET /admin HTTP/1.1" 403 1102
+10.0.0.42 - - [18/Sep/2026:10:16:05] "GET /robots.txt HTTP/1.1" 200 45
+192.168.1.200 - - [18/Sep/2026:10:17:12] "GET /api/v1/status HTTP/1.1" 200 891
+10.0.0.55 - - [18/Sep/2026:10:18:00] "GET / HTTP/1.1" 200 3400
+10.0.0.55 - - [18/Sep/2026:10:18:02] "GET /about.html HTTP/1.1" 200 2100
+172.16.0.15 - - [18/Sep/2026:10:19:10] "GET /assets/css/style.css HTTP/1.1" 200 5430
+172.16.0.15 - - [18/Sep/2026:10:19:11] "GET /assets/js/main.js HTTP/1.1" 200 8920
+192.168.1.50 - - [18/Sep/2026:10:20:00] "POST /api/v1/data HTTP/1.1" 201 120
+192.168.1.50 - - [18/Sep/2026:10:20:01] "DEBUG: Data sync completed"
+10.0.0.89 - - [18/Sep/2026:10:21:45] "GET /contact.html HTTP/1.1" 200 1800
+10.0.0.89 - - [18/Sep/2026:10:21:50] "POST /contact.html HTTP/1.1" 500 320
+10.0.0.89 - - [18/Sep/2026:10:21:51] "ERROR: Internal Server Error on line 42"
+192.168.1.105 - - [18/Sep/2026:10:22:10] "GET /logout.php HTTP/1.1" 302 -
+192.168.1.105 - - [18/Sep/2026:10:22:12] "GET /login.php HTTP/1.1" 200 4521
+10.0.0.101 - - [18/Sep/2026:10:23:05] "GET /services HTTP/1.1" 200 6700
+10.0.0.101 - - [18/Sep/2026:10:23:10] "GET /services/consulting HTTP/1.1" 200 3400
+192.168.1.200 - - [18/Sep/2026:10:24:00] "DEBUG: Connection established successfully"
+192.168.1.200 - - [18/Sep/2026:10:24:01] "INFO: System health check OK"
+192.168.1.200 - - [18/Sep/2026:10:24:02] "INFO: flag{grep_master_2026} is the validation key"
+10.0.0.205 - - [18/Sep/2026:10:25:00] "GET /blog HTTP/1.1" 200 8900
+10.0.0.205 - - [18/Sep/2026:10:25:05] "GET /blog/post-1 HTTP/1.1" 200 4500
+172.16.0.30 - - [18/Sep/2026:10:26:12] "GET /favicon.ico HTTP/1.1" 404 209
+172.16.0.30 - - [18/Sep/2026:10:26:15] "GET /apple-touch-icon.png HTTP/1.1" 404 209
+192.168.1.75 - - [18/Sep/2026:10:27:00] "GET /search?q=linux HTTP/1.1" 200 1500
+192.168.1.75 - - [18/Sep/2026:10:27:05] "GET /search?q=grep HTTP/1.1" 200 1600
