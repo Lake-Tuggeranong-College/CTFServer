@@ -567,10 +567,10 @@ $flash = take_flash();
                                 echo '<li><span class="dropdown-item text-danger small"><i class="bi bi-exclamation-triangle"></i> Error loading projects</span></li>';
                             }
                             ?>
-                            <li>
+                            <!-- <li>
                                 <hr class="dropdown-divider">
-                            </li>
-                            <li><a href="http://10.177.202.196/CyberCityDocs/welcome.html" class="dropdown-item rounded" target="_blank"><i class="bi bi-journal-code me-2"></i>Welcome Guide</a></li>
+                            </li> -->
+                            <!-- <li><a href="http://10.177.202.196/CyberCityDocs/welcome.html" class="dropdown-item rounded" target="_blank"><i class="bi bi-journal-code me-2"></i>Welcome Guide</a></li> -->
                         </ul>
                     </li>
 
@@ -583,7 +583,7 @@ $flash = take_flash();
 
                     <!-- Tech Docs with Book stack icon -->
                     <li class="nav-item cc-nav-item">
-                        <a href="//<?= $_SERVER['SERVER_NAME'] ?>:8001" class="nav-link px-3 cc-nav-link" target="_blank">
+                        <a href="//<?= $_SERVER['SERVER_NAME'] ?>:1082" class="nav-link px-3 cc-nav-link" target="_blank">
                             <i class="bi bi-book-half text-primary"></i> Docs
                         </a>
                     </li>
