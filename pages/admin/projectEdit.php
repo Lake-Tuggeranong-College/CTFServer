@@ -153,9 +153,13 @@ function e(string $s): string {
                                         <td><?= e($proj['project_title']) ?></td>
                                         <td>
                                             <?php if ($proj['enabled']): ?>
-                                                <span class="badge bg-success">Enabled</span>
+                                                <span class="badge bg-success px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Enabled
+                                                </span>
                                             <?php else: ?>
-                                                <span class="badge bg-secondary">Disabled</span>
+                                                <span class="badge bg-danger px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-slash-circle-fill me-1"></i> Disabled
+                                                </span>
                                             <?php endif; ?>
                                         </td>
                                         <td class="text-end pe-4">
