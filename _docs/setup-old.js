@@ -1,17 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// 0. Ensure package.json exists to prevent NPM directory lookup warnings
-if (!fs.existsSync('package.json')) {
-    const defaultPackage = {
-        name: "ctf-docs",
-        version: "1.0.0",
-        private: true,
-        description: "CTF Documentation Site"
-    };
-    fs.writeFileSync('package.json', JSON.stringify(defaultPackage, null, 2));
-}
-
 const docsDir = './';
 const files = fs.readdirSync(docsDir)
     .filter(f => f.endsWith('.md') && !f.startsWith('_') && f !== 'README.md');
