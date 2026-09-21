@@ -1,3 +1,74 @@
+<?php
+ob_start();
+include "template.php"; 
+
+// if (!isset($_SESSION["email_address"])) {
+//     header("Location: login.php");
+//     exit();
+// }
+// session_start();
+
+$error = "";
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = $_POST['email_address'];
+    $password = $_POST['password'];
+    
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE email_address = ?");
+    $stmt->execute([$email]);
+    $user = $stmt->fetch();
+
+    if ($user && password_verify($password, $user['password'])) { // Assuming passwords are stored in plain text for simplicity
+        $_SESSION['email_address'] = $user['email_address'];
+        $_SESSION['name'] = $user['name']; // Store the user's name in the session
+        $_SESSION['user_id'] = $user['id']; 
+        $_SESSION['isMember'] = $user['isMember'];
+        $_SESSION['isVIP'] = $user['isVIP'];
+        header("Location: index.php"); // Redirect to a protected page
+        exit;
+    } else {
+        $error = "Invalid email or password.";
+    }
+}
+
+ob_end_flush();
+?>
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+</head>
+<body class="bg-light">
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Login</div>
+        <div class="card-body">
+            <?php if ($error): ?>
+                <div class="alert alert-danger"><?= $error ?></div>
+            <?php endif; ?>
+            <form method="POST" action="">
+                <div class="mb-3">
+                    <label for="email_address" class="form-label">Email address</label>
+                    <input type="email" class="form-control" name="email_address" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-success">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+
+<!-- 
 <!doctype html>
 <html lang="en">
 <head>
@@ -67,10 +138,10 @@
         </div>
         <small class="legal">Demo only — don't use real passwords here</small>
       </footer>
-    </div>
+    </div> -->
 
     <!-- Fun background shapes -->
-    <svg class="bg-shapes" aria-hidden="true" viewBox="0 0 600 400" preserveAspectRatio="none">
+    <!-- <svg class="bg-shapes" aria-hidden="true" viewBox="0 0 600 400" preserveAspectRatio="none">
       <circle cx="60" cy="60" r="60" fill="#ffd4e6" opacity="0.3"/>
       <circle cx="540" cy="320" r="90" fill="#c6fff8" opacity="0.18"/>
       <rect x="420" y="20" width="90" height="90" rx="18" fill="#d6e2ff" opacity="0.14"/>
@@ -79,4 +150,4 @@
 
   <script src="script.js"></script>
 </body>
-</html>
+</html> -->
