@@ -49,6 +49,7 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: CTF-PHPMyAdmin
+    restart: unless-stopped
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: CTFRootPassw0rd
@@ -64,6 +65,7 @@ services:
   mosquitto:
     image: eclipse-mosquitto:latest 
     container_name: CTF-MQTT-Broker
+    restart: unless-stopped
     ports:
       - "1883:1883" 
     volumes:
@@ -125,6 +127,7 @@ services:
   docs:
     image: node:current-slim
     container_name: CTF-Docs
+    restart: unless-stopped
     working_dir: /app
     ports:
       - "1082:3000"
