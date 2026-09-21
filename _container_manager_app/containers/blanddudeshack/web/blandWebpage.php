@@ -10,6 +10,10 @@
 # define the empty variables that will hold user input
 $name = "";
 $password = "";
+
+# image specifications
+$full_path = "./Beige.jpeg";
+
 # ask if the submit button has been pressed (and the form method is equal to POST) 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     # calls the function with user parameters from the form
@@ -39,4 +43,5 @@ function test_input($username, $password) {
         <!-- creates the physical submit button -->
         <input type="submit" name="submit" value="Submit">
     </form>
+    <img src="<?php echo $full_path; ?>" alt="Beige Beige Beige">
 </div>
