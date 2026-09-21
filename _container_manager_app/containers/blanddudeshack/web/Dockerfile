@@ -5,3 +5,4 @@ RUN a2enmod rewrite
 RUN chown -R www-data:www-data /var/www/html
 
 COPY blandWebpage.php /var/www/html/index.php
+COPY Beige.jpeg /var/www/html/Beige.jpeg
