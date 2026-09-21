@@ -22,7 +22,7 @@ $allProjects = [];
 
 // 2. Fetch all projects for the selection list
 try {
-    $stmtAll = $conn->query("SELECT project_id, project_name, project_title FROM Projects ORDER BY project_id DESC");
+    $stmtAll = $conn->query("SELECT project_id, project_name, project_title, enabled FROM Projects ORDER BY project_id DESC");
     $allProjects = $stmtAll->fetchAll();
 } catch (PDOException $e) {
     $message = "Database error fetching list: " . $e->getMessage();
@@ -50,26 +50,28 @@ if (!empty($p_id_query) && is_numeric($p_id_query)) {
 
 // 4. Handle Form Submission (Update)
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['update_project'])) {
-    $p_id    = $_POST['project_id']; // Hidden field
-    $p_name  = trim($_POST['project_name'] ?? '');
-    $p_title = trim($_POST['project_title'] ?? '');
-    $p_desc  = trim($_POST['project_description'] ?? '');
+    $p_id      = $_POST['project_id']; // Hidden field
+    $p_name    = trim($_POST['project_name'] ?? '');
+    $p_title   = trim($_POST['project_title'] ?? '');
+    $p_desc    = trim($_POST['project_description'] ?? '');
+    $p_enabled = isset($_POST['enabled']) ? 1 : 0; // Checkbox returns 1 if checked, 0 if unchecked
 
     if (empty($p_name) || empty($p_title)) {
         $message = "Internal Name and Display Title are required.";
         $messageType = "danger";
     } else {
         try {
-            $update = $conn->prepare("UPDATE Projects SET project_name = ?, project_title = ?, project_description = ? WHERE project_id = ?");
-            $update->execute([$p_name, $p_title, $p_desc, $p_id]);
+            $update = $conn->prepare("UPDATE Projects SET project_name = ?, project_title = ?, project_description = ?, enabled = ? WHERE project_id = ?");
+            $update->execute([$p_name, $p_title, $p_desc, $p_enabled, $p_id]);
             
             $message = "Project #{$p_id} updated successfully!";
             $messageType = "success";
             
             // Refresh local object for the form
-            $project['project_name'] = $p_name;
-            $project['project_title'] = $p_title;
+            $project['project_name']        = $p_name;
+            $project['project_title']       = $p_title;
             $project['project_description'] = $p_desc;
+            $project['enabled']             = $p_enabled;
 
         } catch (PDOException $e) {
             $message = "Error updating project: " . $e->getMessage();
@@ -134,13 +136,14 @@ function e(string $s): string {
                                 <th class="ps-4">ID</th>
                                 <th>Internal Name</th>
                                 <th>Display Title</th>
+                                <th>Status</th>
                                 <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (empty($allProjects)): ?>
                                 <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted">No projects found in database.</td>
+                                    <td colspan="5" class="text-center py-4 text-muted">No projects found in database.</td>
                                 </tr>
                             <?php else: ?>
                                 <?php foreach ($allProjects as $proj): ?>
@@ -148,6 +151,17 @@ function e(string $s): string {
                                         <td class="ps-4 fw-bold">#<?= e($proj['project_id']) ?></td>
                                         <td><code><?= e($proj['project_name']) ?></code></td>
                                         <td><?= e($proj['project_title']) ?></td>
+                                        <td>
+                                            <?php if ($proj['enabled']): ?>
+                                                <span class="badge bg-success px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Enabled
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="badge bg-danger px-2.5 py-1.5 fw-bold">
+                                                    <i class="bi bi-slash-circle-fill me-1"></i> Disabled
+                                                </span>
+                                            <?php endif; ?>
+                                        </td>
                                         <td class="text-end pe-4">
                                             <a href="?project_id=<?= $proj['project_id'] ?>" class="btn btn-sm btn-outline-primary">
                                                 Select & Edit
@@ -188,6 +202,13 @@ function e(string $s): string {
                         <div class="col-12">
                             <label class="form-label fw-semibold">Description</label>
                             <textarea name="project_description" class="form-control" rows="4"><?= e($project['project_description']) ?></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" role="switch" id="enabled" name="enabled" value="1" <?= !empty($project['enabled']) ? 'checked' : '' ?>>
+                                <label class="form-check-label fw-semibold" for="enabled">Enable Project</label>
+                            </div>
+                            <div class="form-text">Disabling a project hides or deactivates it on the platform.</div>
                         </div>
                     </div>
 

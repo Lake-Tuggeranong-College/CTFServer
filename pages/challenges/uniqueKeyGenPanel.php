@@ -1,7 +1,6 @@
 <?php
 ob_start();
 require_once "../../includes/template.php";
-require_once __DIR__ . '/../../includes/config.php'; // must define $conn (PDO) and BASE_URL
 
 $temperature = 10; // default
 $message = "";
@@ -35,7 +34,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $num = ($time * pow(($temperature + $_SESSION["user_input"]), 2)) % 1000000;
         $key = "CTF{SUDORANDOM" . (string)$num . "}";
-        $stmt = $conn->prepare("UPDATE Challenges SET flag = :key WHERE challengeTitle = :name");
+        $stmt = $conn->prepare("UPDATE Challenges SET flag = :key WHERE challengeTitle = :name"); // $conn is defined in template.php
         $stmt->execute([':key' => $key, ':name' => 'Encryption Hunt']);
     } else {
         unset($_SESSION['user_input']);
