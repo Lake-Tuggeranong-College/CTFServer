@@ -55,10 +55,13 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
         $href .= "&dockerID=" . urlencode($dockerChallengeId);
     }
 
-    // Pick image (fallback if missing)
-    $imgSrc = $imageFileName !== ''
-        ? BASE_URL . "assets/img/challengeImages/" . rawurlencode($imageFileName)
-        : BASE_URL . "assets/img/challengeImages/Image%20Not%20Found.jpg";
+    // Server path check to verify if the custom image exists
+    $baseImgDir = __DIR__ . "/../../assets/img/challengeImages/";
+    if ($imageFileName !== '' && file_exists($baseImgDir . $imageFileName)) {
+        $imgSrc = BASE_URL . "assets/img/challengeImages/" . rawurlencode($imageFileName);
+    } else {
+        $imgSrc = BASE_URL . "assets/img/challengeImages/_default.jpg";
+    }
     ?>
     <div class="col-12 col-sm-6 col-lg-4 col-xxl-3 mb-3">
         <a href="<?= e($href) ?>" class="text-decoration-none challenge-card-link">
