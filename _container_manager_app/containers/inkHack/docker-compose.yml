@@ -1,37 +1,89 @@
-services:
+# services:
 
-  Challenge-web:
-    build: .
-    image: php:8.2-apache
-    container_name: Secret-php_apache
+#   Challenge-web:
+#     build: .
+#     image: php:8.2-apache
+#     container_name: Secret-php_apache
+#     ports:
+#       - "${PORT}:80"
+
+#   Secret-db:
+#     image: mariadb:latest
+#     container_name: Secret-db
+#     restart: always
+#     environment: 
+#       MYSQL_ROOT_PASSWORD: password
+#       MYSQL_DATABASE: secret
+#       MYSQL_USER: secret
+#       MYSQL_PASSWORD: secret
+#     volumes:
+#       - Secret-db_data:/var/lib/mysql
+#     ports:
+#       - "3306:3306"
+
+#   Secret-phpmyadmin:
+#     image: phpmyadmin/phpmyadmin
+#     container_name: Secret-phpmyadmin
+#     environment:
+#       PMA_HOST: Secret-db
+#       MYSQL_ROOT_PASSWORD: password
+#       PMA_PORT: 3306
+#     ports:
+#       - "8081:80":/docker-entrypoint-initdb.d
+#     depends_on:
+#       - Secret-db
+
+# volumes:
+#   Secret-db_data: 
+
+
+services:
+  inkhack:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: inkhack:latest
+    container_name: inkhack_php_apache
     ports:
       - "${PORT}:80"
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    depends_on:
+      - secret-db
 
-  Secret-db:
+  secret-db:
     image: mariadb:latest
-    container_name: Secret-db
-    restart: always
-    environment: 
+    container_name: secret-db
+    restart: unless-stopped
+    environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: secret
       MYSQL_USER: secret
       MYSQL_PASSWORD: secret
+      MYSQL_PORT: ${PORT}
     volumes:
       - Secret-db_data:/var/lib/mysql
+      - .:/docker-entrypoint-initdb.d
     ports:
       - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  Secret-phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: Secret-phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: secret-phpmyadmin
     environment:
-      PMA_HOST: Secret-db
+      PMA_HOST: secret-db
       MYSQL_ROOT_PASSWORD: password
       PMA_PORT: 3306
     ports:
       - "8081:80"
     depends_on:
-      - Secret-db
+      - secret-db
 
 volumes:
-  Secret-db_data: 
+  Secret-db_data: {}
