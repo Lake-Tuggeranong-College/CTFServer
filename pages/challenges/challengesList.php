@@ -32,7 +32,8 @@ if ($pRow = $projectQuery->fetch(PDO::FETCH_ASSOC)) {
 }
 
 // Helper for safe HTML
-function e(string $s): string {
+function e(string $s): string
+{
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
@@ -43,7 +44,7 @@ function renderDifficultyStars(int $rating): string
 {
     // Clamp rating between 1 and 5
     $rating = max(1, min(5, $rating));
-    
+
     $html = '<span class="difficulty-stars text-warning me-2" title="Difficulty: ' . $rating . '/5">';
     for ($i = 1; $i <= 5; $i++) {
         if ($i <= $rating) {
@@ -84,11 +85,11 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
     } else {
         $imgSrc = BASE_URL . "assets/img/challengeImages/_default.jpg";
     }
-    ?>
+?>
     <div class="col-12 col-sm-6 col-lg-4 col-xxl-3 mb-3">
         <a href="<?= e($href) ?>" class="text-decoration-none challenge-card-link">
             <div class="card condensed-challenge-card h-100 shadow-sm border-0 position-relative overflow-hidden p-2.5 <?= $isCompleted ? 'challenge-completed' : '' ?>">
-                
+
                 <?php if ($isCompleted): ?>
                     <!-- Completed Badge Tag -->
                     <span class="position-absolute top-0 end-0 bg-success text-white px-2 py-1 rounded-bottom-start shadow-sm small fw-bold completion-tag" title="Challenge Completed">
@@ -120,7 +121,7 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
             </div>
         </a>
     </div>
-    <?php
+<?php
 }
 
 /**
@@ -161,7 +162,7 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
     foreach ($rows as $row) {
         $categories[$row['CategoryName']][] = $row;
     }
-    ?>
+?>
 
     <!-- Category Filter Menu -->
     <div class="category-filter-bar sticky-top py-2.5 mb-4 shadow-sm bg-body rounded-3 border">
@@ -192,9 +193,9 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
                 </div>
                 <div class="row g-3">
                     <?php foreach ($catChallenges as $challenge): ?>
-                        <?php 
-                            $isCompleted = in_array($challenge['ID'], $completedChallengeIDs);
-                            createChallengeCard($challenge, $isCompleted); 
+                        <?php
+                        $isCompleted = in_array($challenge['ID'], $completedChallengeIDs);
+                        createChallengeCard($challenge, $isCompleted);
                         ?>
                     <?php endforeach; ?>
                 </div>
@@ -203,12 +204,12 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const filterBtns = document.querySelectorAll('.filter-btn');
             const catGroups = document.querySelectorAll('.category-group');
 
             filterBtns.forEach(btn => {
-                btn.addEventListener('click', function (e) {
+                btn.addEventListener('click', function(e) {
                     const filter = this.getAttribute('data-filter');
 
                     filterBtns.forEach(b => {
@@ -233,15 +234,28 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
             });
         });
     </script>
-    <?php
+<?php
 }
 ?>
 
 <head>
     <link rel="stylesheet" href="<?= e(BASE_URL) ?>assets/css/moduleList.css">
     <style>
+        /* Force Navbar & Dropdowns to sit above all page content */
+        .navbar,
+        .navbar .dropdown-menu {
+            z-index: 1050 !important;
+        }
+
+        /* Prevent filter containers from forming high stacking contexts */
+        .filter-container,
+        .card,
+        .form-select {
+            z-index: 1 !important;
+        }
+
         .project-header {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(0, 0, 0, 0.05) 100%);
             border-left: 5px solid #ffc107;
             padding: 1.25rem 1.75rem;
             margin-bottom: 1.5rem;
@@ -281,7 +295,7 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
             overflow: hidden;
             border-radius: 0.5rem;
             background: #f8f9fa;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .challenge-thumb {
