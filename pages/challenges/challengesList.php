@@ -37,6 +37,27 @@ function e(string $s): string {
 }
 
 /**
+ * Render Bootstrap Star Icons for Difficulty (out of 5).
+ */
+function renderDifficultyStars(int $rating): string
+{
+    // Clamp rating between 1 and 5
+    $rating = max(1, min(5, $rating));
+    
+    $html = '<span class="difficulty-stars text-warning me-2" title="Difficulty: ' . $rating . '/5">';
+    for ($i = 1; $i <= 5; $i++) {
+        if ($i <= $rating) {
+            $html .= '<i class="bi bi-star-fill"></i>';
+        } else {
+            $html .= '<i class="bi bi-star text-muted opacity-50"></i>';
+        }
+    }
+    $html .= '</span>';
+
+    return $html;
+}
+
+/**
  * Render a single condensed challenge card.
  */
 function createChallengeCard(array $challengeData, bool $isCompleted = false): void
@@ -45,6 +66,7 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
     $challengeID       = $challengeData['ID'];
     $challengeTitle    = $challengeData['challengeTitle'] ?? 'Untitled Challenge';
     $pointsValue       = isset($challengeData['pointsValue']) ? (int)$challengeData['pointsValue'] : 0;
+    $difficulty        = isset($challengeData['difficulty']) ? (int)$challengeData['difficulty'] : 1;
     $imageFileName     = trim((string)($challengeData['Image'] ?? ''));
     $dockerChallengeId = $challengeData['dockerChallengeID'] ?? null;
 
@@ -82,10 +104,13 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
                         <h5 class="card-title fw-bold mb-2 pe-3 text-wrap-title" title="<?= e($challengeTitle) ?>">
                             <?= e($challengeTitle) ?>
                         </h5>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="badge bg-warning text-dark fw-bold points-badge">
-                                <i class="bi bi-star-fill me-1"></i><?= $pointsValue ?> pts
-                            </span>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                            <div class="d-flex align-items-center">
+                                <?= renderDifficultyStars($difficulty) ?>
+                                <span class="badge bg-warning text-dark fw-bold points-badge">
+                                    <?= $pointsValue ?> pts
+                                </span>
+                            </div>
                             <span class="btn-start-icon text-primary fw-bold small">
                                 <?= $isCompleted ? 'Review' : 'Start' ?> <i class="bi bi-arrow-right-short"></i>
                             </span>
@@ -265,7 +290,7 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
             object-fit: cover;
         }
 
-        /* Enlarged Title with Responsive Wrapping */
+        /* Title with Responsive Wrapping */
         .text-wrap-title {
             font-size: 1.1rem;
             font-weight: 700;
@@ -276,9 +301,15 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
             line-height: 1.25;
         }
 
-        .points-badge {
+        /* Difficulty Stars Styling */
+        .difficulty-stars {
             font-size: 0.75rem;
-            padding: 0.35em 0.65em;
+            letter-spacing: -1px;
+        }
+
+        .points-badge {
+            font-size: 0.725rem;
+            padding: 0.35em 0.55em;
         }
 
         .btn-start-icon {

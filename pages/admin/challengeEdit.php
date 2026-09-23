@@ -18,6 +18,17 @@ if (!authorisedAccess(false, true, true)) {
 $message = "";
 $messageType = "";
 
+// Helper to render star icons
+function renderStars(int $rating): string {
+    $rating = max(1, min(5, $rating));
+    $html = '<span class="text-warning">';
+    for ($i = 1; $i <= 5; $i++) {
+        $html .= ($i <= $rating) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star text-muted opacity-50"></i>';
+    }
+    $html .= '</span>';
+    return $html;
+}
+
 // 2. Handle Form Submission (Update)
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_challenge'])) {
     $challengeID = filter_input(INPUT_POST, 'challengeID', FILTER_VALIDATE_INT);
@@ -26,6 +37,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_challenge'])) {
         $challengeText     = $_POST["challengeText"];
         $flag              = $_POST["flag"];
         $pointsValue       = (int)$_POST["pointsValue"];
+        $difficulty        = (int)($_POST["difficulty"] ?? 1);
         $moduleName        = $_POST["moduleName"];
         $moduleValue       = $_POST["moduleValue"];
         $dockerChallengeID = !empty($_POST["dockerChallengeID"]) ? $_POST["dockerChallengeID"] : null;
@@ -50,17 +62,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_challenge'])) {
 
         $updateSql = "UPDATE Challenges SET 
                         challengeTitle = :title, challengeText = :text, flag = :flag, 
-                        pointsValue = :points, moduleName = :mName, moduleValue = :mVal, 
+                        pointsValue = :points, difficulty = :difficulty, moduleName = :mName, moduleValue = :mVal, 
                         dockerChallengeID = :dockerID, container = :container, 
                         Image = :image, Enabled = :enabled, categoryID = :catID 
                       WHERE ID = :id";
         
         $stmt = $conn->prepare($updateSql);
         $stmt->execute([
-            ':title'     => $challengeTitle, ':text' => $challengeText, ':flag' => $flag,
-            ':points'    => $pointsValue, ':mName' => $moduleName, ':mVal' => $moduleValue,
-            ':dockerID'  => $dockerChallengeID, ':container' => $container, ':image' => $image,
-            ':enabled'   => $enabled, ':catID' => $categoryID, ':id' => $challengeID
+            ':title'      => $challengeTitle, ':text' => $challengeText, ':flag' => $flag,
+            ':points'     => $pointsValue, ':difficulty' => $difficulty, ':mName' => $moduleName, 
+            ':mVal'       => $moduleValue, ':dockerID'  => $dockerChallengeID, ':container' => $container, 
+            ':image'      => $image, ':enabled'   => $enabled, ':catID' => $categoryID, ':id' => $challengeID
         ]);
 
         $conn->prepare("DELETE FROM ProjectChallenges WHERE challenge_id = ?")->execute([$challengeID]);
@@ -89,7 +101,6 @@ function e(?string $s): string {
     <title>Admin - Manage Challenges</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap Icons (Optional fallback if not in template) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 <body class="bg-light">
@@ -107,7 +118,7 @@ function e(?string $s): string {
                 <h1 class="h2 fw-bold text-dark mb-1">Challenge Management</h1>
                 <p class="text-muted">Select an existing challenge to modify its configuration.</p>
             </div>
-            <a href="challengeRegister.php" class="btn btn-success fw-bold">
+            <a href="challengeCreate.php" class="btn btn-success fw-bold">
                 <i class="bi bi-plus-lg me-1"></i> New Challenge
             </a>
         </div>
@@ -120,6 +131,7 @@ function e(?string $s): string {
                             <th>ID</th>
                             <th>Title</th>
                             <th>Category</th>
+                            <th>Difficulty</th>
                             <th>Points</th>
                             <th>Status</th>
                             <th class="text-end">Actions</th>
@@ -127,7 +139,7 @@ function e(?string $s): string {
                     </thead>
                     <tbody>
                         <?php
-                        $query = "SELECT c.ID, c.challengeTitle, c.pointsValue, c.Enabled, cat.CategoryName 
+                        $query = "SELECT c.ID, c.challengeTitle, c.pointsValue, c.difficulty, c.Enabled, cat.CategoryName 
                                   FROM Challenges c 
                                   LEFT JOIN Category cat ON c.categoryID = cat.id 
                                   ORDER BY c.ID DESC";
@@ -140,6 +152,7 @@ function e(?string $s): string {
                                     <span class="fw-bold"><?= e($row['challengeTitle']) ?></span>
                                 </td>
                                 <td><span class="badge bg-secondary"><?= e($row['CategoryName'] ?? 'Uncategorized') ?></span></td>
+                                <td><?= renderStars((int)($row['difficulty'] ?? 1)) ?></td>
                                 <td><?= $row['pointsValue'] ?></td>
                                 <td>
                                     <?php if ($row['Enabled']): ?>
@@ -209,15 +222,26 @@ function e(?string $s): string {
                         </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Points Value</label>
                                 <input type="number" class="form-control" name="pointsValue" value="<?= $challenge['pointsValue'] ?>" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Difficulty (1-5 Stars)</label>
+                                <select class="form-select" name="difficulty" required>
+                                    <?php $currDiff = (int)($challenge['difficulty'] ?? 1); ?>
+                                    <option value="1" <?= $currDiff == 1 ? 'selected' : '' ?>>★☆☆☆☆ (1/5)</option>
+                                    <option value="2" <?= $currDiff == 2 ? 'selected' : '' ?>>★★☆☆☆ (2/5)</option>
+                                    <option value="3" <?= $currDiff == 3 ? 'selected' : '' ?>>★★★☆☆ (3/5)</option>
+                                    <option value="4" <?= $currDiff == 4 ? 'selected' : '' ?>>★★★★☆ (4/5)</option>
+                                    <option value="5" <?= $currDiff == 5 ? 'selected' : '' ?>>★★★★★ (5/5)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Container ID</label>
                                 <input type="number" class="form-control" name="container" value="<?= $challenge['container'] ?>" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Status</label>
                                 <select class="form-select" name="enabled">
                                     <option value="1" <?= $challenge['Enabled'] == 1 ? 'selected' : '' ?>>Enabled</option>

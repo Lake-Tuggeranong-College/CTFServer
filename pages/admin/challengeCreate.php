@@ -40,7 +40,8 @@ if (!authorisedAccess(false, false, true)) {
                         $challengeTitle = $_POST["challengeTitle"];
                         $challengeText = $_POST["challengeText"];
                         $flag = $_POST["flag"];
-                        $pointsValue = $_POST["pointsValue"];
+                        $pointsValue = (int)$_POST["pointsValue"];
+                        $difficulty = (int)($_POST["difficulty"] ?? 1);
                         $enabled = isset($_POST["enabled"]) ? 1 : 0;
                         $categoryID = $_POST["categoryID"];
                         $projectID = $_POST["projectID"];
@@ -51,15 +52,15 @@ if (!authorisedAccess(false, false, true)) {
                         $dockerChallengeID = (!empty($_POST['hasDocker'])) ? $_POST["dockerChallengeID"] : null;
                         $container = null; // Forced to NULL as requested
 
-                        $insertSql = "INSERT INTO Challenges (challengeTitle, challengeText, flag, pointsValue, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID) 
-                                      VALUES (:title, :text, :flag, :points, :mName, :mVal, :dId, :cont, :img, :enabled, :catId)";
+                        $insertSql = "INSERT INTO Challenges (challengeTitle, challengeText, flag, pointsValue, difficulty, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID) 
+                                      VALUES (:title, :text, :flag, :points, :difficulty, :mName, :mVal, :dId, :cont, :img, :enabled, :catId)";
 
                         $stmt = $conn->prepare($insertSql);
                         $stmt->execute([
                             ':title' => $challengeTitle, ':text' => $challengeText, ':flag' => $flag,
-                            ':points' => $pointsValue, ':mName' => $moduleName, ':mVal' => $moduleValue,
-                            ':dId' => $dockerChallengeID, ':cont' => $container, ':img' => $targetFile,
-                            ':enabled' => $enabled, ':catId' => $categoryID
+                            ':points' => $pointsValue, ':difficulty' => $difficulty, ':mName' => $moduleName, 
+                            ':mVal' => $moduleValue, ':dId' => $dockerChallengeID, ':cont' => $container, 
+                            ':img' => $targetFile, ':enabled' => $enabled, ':catId' => $categoryID
                         ]);
 
                         $challengeID = $conn->lastInsertId();
@@ -74,13 +75,23 @@ if (!authorisedAccess(false, false, true)) {
                     <form method="post" action="" enctype="multipart/form-data" class="needs-validation" novalidate>
                         
                         <div class="row g-3 mb-3">
-                            <div class="col-md-9">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold">Challenge Title *</label>
                                 <input type="text" class="form-control form-control-lg" name="challengeTitle" required>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-bold">Points *</label>
                                 <input type="number" class="form-control form-control-lg" name="pointsValue" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Difficulty (1-5) *</label>
+                                <select class="form-select form-select-lg" name="difficulty" required>
+                                    <option value="1">★☆☆☆☆ (1/5 - Very Easy)</option>
+                                    <option value="2">★★☆☆☆ (2/5 - Easy)</option>
+                                    <option value="3" selected>★★★☆☆ (3/5 - Medium)</option>
+                                    <option value="4">★★★★☆ (4/5 - Hard)</option>
+                                    <option value="5">★★★★★ (5/5 - Very Hard)</option>
+                                </select>
                             </div>
                         </div>
 
