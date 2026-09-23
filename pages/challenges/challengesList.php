@@ -65,7 +65,7 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
     ?>
     <div class="col-12 col-sm-6 col-lg-4 col-xxl-3 mb-3">
         <a href="<?= e($href) ?>" class="text-decoration-none challenge-card-link">
-            <div class="card condensed-challenge-card h-100 shadow-sm border-0 position-relative overflow-hidden p-2 <?= $isCompleted ? 'challenge-completed' : '' ?>">
+            <div class="card condensed-challenge-card h-100 shadow-sm border-0 position-relative overflow-hidden p-2.5 <?= $isCompleted ? 'challenge-completed' : '' ?>">
                 
                 <?php if ($isCompleted): ?>
                     <!-- Completed Badge Tag -->
@@ -78,10 +78,10 @@ function createChallengeCard(array $challengeData, bool $isCompleted = false): v
                     <div class="challenge-thumb-wrapper me-3 flex-shrink-0 position-relative">
                         <img src="<?= e($imgSrc) ?>" alt="<?= e($challengeTitle) ?>" class="challenge-thumb rounded">
                     </div>
-                    <div class="flex-grow-1 min-w-0 pe-2">
-                        <h6 class="card-title fw-bold mb-2 pe-3 text-wrap-title" title="<?= e($challengeTitle) ?>">
+                    <div class="flex-grow-1 min-w-0 pe-1">
+                        <h5 class="card-title fw-bold mb-2 pe-3 text-wrap-title" title="<?= e($challengeTitle) ?>">
                             <?= e($challengeTitle) ?>
-                        </h6>
+                        </h5>
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="badge bg-warning text-dark fw-bold points-badge">
                                 <i class="bi bi-star-fill me-1"></i><?= $pointsValue ?> pts
@@ -265,14 +265,14 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
             object-fit: cover;
         }
 
+        /* Enlarged Title with Responsive Wrapping */
         .text-wrap-title {
-            font-size: 0.975rem;
+            font-size: 1.1rem;
+            font-weight: 700;
             color: var(--bs-body-color);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
             line-height: 1.25;
         }
 
