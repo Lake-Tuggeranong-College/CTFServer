@@ -17,20 +17,26 @@ if (!authorisedAccess(false, false, true)) {
 $message = "";
 $messageType = "";
 
+// Helper to render star icons
+function renderStars(int $rating): string {$rating = max(1, min(5, $rating));$html = '<span class="text-warning small">';
+    for ($i = 1; $i <= 5; $i++) {$html .= ($i <=$rating) ? '<i class="bi bi-star-fill"></i>' : '<i class="bi bi-star text-muted opacity-50"></i>';
+    }
+    $html .= '</span>';
+    return $html;
+}
+
 // 2. Handle Export Logic
 if (isset($_POST['export_selected'])) {
-    $selectedIds = $_POST['challenge_ids'] ?? [];
+    $selectedIds =$_POST['challenge_ids'] ?? [];
     if (!empty($selectedIds)) {
         $placeholders = str_repeat('?,', count($selectedIds) - 1) . '?';
-        // Select all fields based on the specified schema
-        $stmt = $conn->prepare("SELECT id, challengeTitle, challengeText, flag, pointsValue, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID, files FROM Challenges WHERE id IN ($placeholders)");
+        // Select all fields including difficulty
+        $stmt =$conn->prepare("SELECT id, challengeTitle, challengeText, flag, pointsValue, difficulty, moduleName, moduleValue, dockerChallengeID, container, Image, Enabled, categoryID, files FROM Challenges WHERE id IN ($placeholders)");
         $stmt->execute($selectedIds);
-        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $data =$stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $jsonOutput = json_encode($data, JSON_PRETTY_PRINT);
-        $filename = "challenges_full_export_" . date('Y-m-d_H-i') . ".json";
+        $jsonOutput = json_encode($data, JSON_PRETTY_PRINT);$filename = "challenges_full_export_" . date('Y-m-d_H-i') . ".json";
 
-        // Clear any previously buffered HTML from template.php
         if (ob_get_length()) ob_end_clean();
 
         header('Content-Type: application/json');
@@ -50,35 +56,23 @@ if (isset($_POST['import_file']) && isset($_FILES['json_file'])) {
         $fileData = file_get_contents($_FILES['json_file']['tmp_name']);
         $challenges = json_decode($fileData, true);
 
-        if (is_array($challenges)) {
-            $importedCount = 0;
+        if (is_array($challenges)) {$importedCount = 0;
             try {
                 $conn->beginTransaction();
 
-                foreach ($challenges as $item) {
-                    // Remove 'id' from the item to allow DB auto-increment to handle it
+                foreach ($challenges as$item) {
                     if (isset($item['id'])) {
                         unset($item['id']);
                     }
 
-                    // INSERT NEW ENTRY
-                    $keys = array_keys($item);
-                    $cols = implode('`, `', $keys);
-                    $placeholders = str_repeat('?,', count($keys) - 1) . '?';
-                    
-                    $sql = "INSERT INTO Challenges (`$cols`) VALUES ($placeholders)";
-                    $stmt = $conn->prepare($sql);
-                    $stmt->execute(array_values($item));
-                    $importedCount++;
+                    $keys = array_keys($item);$cols = implode('`, `', $keys);$placeholders = str_repeat('?,', count($keys) - 1) . '?';$sql = "INSERT INTO Challenges (`$cols`) VALUES ($placeholders)";
+                    $stmt =$conn->prepare($sql);$stmt->execute(array_values($item));$importedCount++;
                 }
                 
-                $conn->commit();
-                $message = "Import Successful: $importedCount new challenges created.";
+                $conn->commit();$message = "Import Successful: $importedCount new challenges created.";
                 $messageType = "success";
             } catch (Exception $e) {
-                if ($conn->inTransaction()) $conn->rollBack();
-                $message = "Import Failed: " . $e->getMessage();
-                $messageType = "danger";
+                if ($conn->inTransaction()) $conn->rollBack();$message = "Import Failed: " . $e->getMessage();$messageType = "danger";
             }
         } else {
             $message = "Invalid JSON format.";
@@ -93,10 +87,8 @@ if (isset($_POST['import_file']) && isset($_FILES['json_file'])) {
 // 4. Fetch All Challenges for View
 $challengesList = [];
 try {
-    $challengesList = $conn->query("SELECT id, challengeTitle, pointsValue, moduleName FROM Challenges ORDER BY id DESC")->fetchAll();
-} catch (PDOException $e) {
-    $message = "Could not load challenges: " . $e->getMessage();
-    $messageType = "danger";
+    $challengesList =$conn->query("SELECT id, challengeTitle, pointsValue, difficulty, moduleName FROM Challenges ORDER BY id DESC")->fetchAll();
+} catch (PDOException $e) {$message = "Could not load challenges: " . $e->getMessage();$messageType = "danger";
 }
 
 function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
@@ -121,8 +113,7 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
     <div class="mb-4">
         <h1 class="fw-bold text-primary">Challenge Data Manager</h1>
-        <p class="text-muted">Export selected challenges to JSON or import them back into the database. 
-           <strong>Note:</strong> Importing always creates new entries using your database's auto-incrementing IDs.</p>
+        <p class="text-muted">Export selected challenges to JSON or import them back into the database.</p>
     </div>
 
     <?php if ($message): ?>
@@ -151,8 +142,9 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
                                         <th class="ps-4" width="40">
                                             <input type="checkbox" id="selectAll" class="form-check-input">
                                         </th>
-                                        <th width="80">ID</th>
+                                        <th width="60">ID</th>
                                         <th>Title</th>
+                                        <th>Difficulty</th>
                                         <th>Module</th>
                                         <th class="text-center">Points</th>
                                     </tr>
@@ -160,16 +152,17 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
                                 <tbody>
                                     <?php if (empty($challengesList)): ?>
                                         <tr>
-                                            <td colspan="5" class="text-center py-5 text-muted italic">No challenges found in database.</td>
+                                            <td colspan="6" class="text-center py-5 text-muted italic">No challenges found in database.</td>
                                         </tr>
                                     <?php else: ?>
-                                        <?php foreach ($challengesList as $ch): ?>
+                                        <?php foreach ($challengesList as$ch): ?>
                                             <tr>
                                                 <td class="ps-4">
                                                     <input type="checkbox" name="challenge_ids[]" value="<?= $ch['id'] ?>" class="form-check-input chk-item">
                                                 </td>
                                                 <td><span class="text-muted small">#</span><?= e($ch['id']) ?></td>
                                                 <td class="fw-semibold text-dark"><?= e($ch['challengeTitle']) ?></td>
+                                                <td><?= renderStars((int)($ch['difficulty'] ?? 1)) ?></td>
                                                 <td><code class="small bg-light p-1 border rounded"><?= e($ch['moduleName'] ?: 'None') ?></code></td>
                                                 <td class="text-center">
                                                     <span class="badge bg-info text-dark border-info border-opacity-25"><?= e($ch['pointsValue']) ?></span>
@@ -192,9 +185,6 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
                     <h5 class="mb-0 fw-bold">Import Data</h5>
                 </div>
                 <div class="card-body">
-                    <p class="small text-muted mb-4">
-                        Upload a challenge JSON file. This will <strong>create new copies</strong> of the challenges in your database.
-                    </p>
                     <form method="POST" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label class="form-label small fw-bold">Select JSON File</label>
@@ -208,26 +198,15 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
                     </form>
                 </div>
             </div>
-
-            <div class="card border-0 shadow-sm bg-white">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-2">Import Logic</h6>
-                    <p class="small text-muted mb-0">
-                        The system now automatically unsets the ID field from imported data, allowing your database's <code>AUTO_INCREMENT</code> logic to assign fresh IDs to every imported challenge.
-                    </p>
-                </div>
-            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Handle Select All
     document.getElementById('selectAll').addEventListener('change', function() {
         const checkboxes = document.querySelectorAll('.chk-item');
         checkboxes.forEach(cb => cb.checked = this.checked);
     });
 </script>
-
 </body>
 </html>
