@@ -11,6 +11,8 @@ RUN echo 'root:password' | chpasswd
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
 COPY start.sh /start.sh
+COPY Beige.jpeg /var/www/html/Beige.jpeg
+
 RUN chmod +x /start.sh
 
 EXPOSE 22
