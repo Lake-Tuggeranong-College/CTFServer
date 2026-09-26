@@ -529,6 +529,8 @@ $flash = take_flash();
             border: 2px solid #ffffff !important;
             font-weight: bold !important;
         }
+
+        
     </style>
 </head>
 
@@ -626,7 +628,7 @@ $flash = take_flash();
                             <li class="mt-2">
                                 <small class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;"><i class="bi bi-palette me-1"></i> Environment Controls</small>
                                 <button id="modeToggle" class="btn btn-sm btn-dark w-100 mb-2 py-1.5 fw-bold"><i class="bi bi-moon-stars me-1"></i> Toggle Dark Mode</button>
-                                <button id="toggleContrast" class="btn btn-sm btn-outline-dark w-100 py-1.5 fw-bold"><i class="bi bi-eye me-1"></i> High Contrast</button>
+                                <button id="toggleContrast" class="btn btn-sm btn-dark w-100 mb-2 py-1.5 fw-bold"><i class="bi bi-moon-stars me-1"></i> High Contrast</button>
                             </li>
                         </ul>
                     </li>
