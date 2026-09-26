@@ -2,7 +2,7 @@
 
 /**
  * challengeDisplayUnified.php
- * Enhanced CTF UI with host IP resolution for Docker containers.
+ * Enhanced CTF UI with full window width and {HOST_IP} placeholder replacement.
  */
 
 // Start output buffering to prevent accidental whitespace from triggering header errors
@@ -39,6 +39,19 @@ $image = null;
 $selfUrl = strtok($_SERVER['REQUEST_URI'], '?') . '?challengeID=' . $challengeToLoad;
 if ($isDockerChallenge) {
     $selfUrl .= "&dockerID=" . urlencode($dockerID);
+}
+
+// ---------------------------------------------------------
+// IP Address Resolution
+// ---------------------------------------------------------
+$rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? gethostname();
+$ipAddress = explode(':', $rawHost)[0];
+
+if ($ipAddress === 'localhost' || $ipAddress === '127.0.0.1') {
+    $resolvedIP = $_SERVER['SERVER_ADDR'] ?? gethostbyname(gethostname());
+    if (filter_var($resolvedIP, FILTER_VALIDATE_IP)) {
+        $ipAddress = $resolvedIP;
+    }
 }
 
 /* ------------ FUNCTIONS (Common) ------------- */
@@ -88,7 +101,7 @@ function http_post_json(string $url, array $payload, int $timeout = 4): array
 
 function loadChallengeData()
 {
-    global $conn, $challengeToLoad, $challengeID, $title, $challengeText, $pointsValue, $difficulty, $flag, $projectID, $files, $image, $isDockerChallenge;
+    global $conn, $challengeToLoad, $challengeID, $title, $challengeText, $pointsValue, $difficulty, $flag, $projectID, $files, $image, $isDockerChallenge, $ipAddress;
 
     $cols = "ID, challengeTitle, challengeText, pointsValue, difficulty, flag, files";
     if ($isDockerChallenge) {
@@ -100,7 +113,11 @@ function loadChallengeData()
     if ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
         $challengeID   = $row["ID"];
         $title         = $row["challengeTitle"];
-        $challengeText = $row["challengeText"];
+        
+        // Replace {HOST_IP} placeholder with current server IP address
+        $rawText       = $row["challengeText"] ?? '';
+        $challengeText = str_replace('{HOST_IP}', $ipAddress, $rawText);
+
         $pointsValue   = $row["pointsValue"];
         $difficulty    = $row["difficulty"] ?? 1;
         $flag          = $row["flag"];
@@ -193,18 +210,6 @@ handleFlagSubmission();
 $isRunning = false;
 $deletionTime = null;
 $timeInitialised = null;
-
-// Determine IP address (Preferring direct Server/Host IP over localhost fallback)
-$rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? gethostname();
-$ipAddress = explode(':', $rawHost)[0];
-
-if ($ipAddress === 'localhost' || $ipAddress === '127.0.0.1') {
-    $resolvedIP = $_SERVER['SERVER_ADDR'] ?? gethostbyname(gethostname());
-    if (filter_var($resolvedIP, FILTER_VALIDATE_IP)) {
-        $ipAddress = $resolvedIP;
-    }
-}
-
 $port = null;
 
 if ($isDockerChallenge) {
@@ -303,7 +308,8 @@ if ($isDockerChallenge) {
 
 <body>
 
-<main class="container my-4">
+<!-- Full Window Width Container -->
+<main class="container-fluid px-4 px-md-5 my-4">
 
     <!-- Sub-Navigation Breadcrumbs -->
     <nav aria-label="breadcrumb" class="mb-3">
@@ -457,7 +463,7 @@ if ($isDockerChallenge) {
     <section class="mt-5">
         <h4 class="fw-bold mb-3"><i class="bi bi-activity me-2"></i>Module Logs & Data</h4>
         <div class="table-responsive shadow-sm rounded border">
-            <table class="table table-hover table-striped align-middle theme-table mb-0">
+            <table class="table table-hover table-striped align-middle theme-table mb-0 w-100">
                 <thead class="table-light">
                     <tr>
                         <th style="width:25%" class="ps-3">Date & Time</th>
