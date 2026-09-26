@@ -2,8 +2,7 @@
 
 /**
  * challengeDisplayUnified.php
- * Enhanced CTF UI with modern cards, breadcrumbs, terminal submission styling, 
- * live Docker status indicators, copy-to-clipboard tools, and responsive layouts.
+ * Enhanced CTF UI with host IP resolution for Docker containers.
  */
 
 // Start output buffering to prevent accidental whitespace from triggering header errors
@@ -195,7 +194,17 @@ $isRunning = false;
 $deletionTime = null;
 $timeInitialised = null;
 
-$ipAddress = $_SERVER['HTTP_HOST'] ?? 'localhost';
+// Determine IP address (Preferring direct Server/Host IP over localhost fallback)
+$rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? gethostname();
+$ipAddress = explode(':', $rawHost)[0];
+
+if ($ipAddress === 'localhost' || $ipAddress === '127.0.0.1') {
+    $resolvedIP = $_SERVER['SERVER_ADDR'] ?? gethostbyname(gethostname());
+    if (filter_var($resolvedIP, FILTER_VALIDATE_IP)) {
+        $ipAddress = $resolvedIP;
+    }
+}
+
 $port = null;
 
 if ($isDockerChallenge) {
@@ -296,7 +305,7 @@ if ($isDockerChallenge) {
 
 <main class="container my-4">
 
-    <!-- 1. Sub-Navigation Breadcrumbs -->
+    <!-- Sub-Navigation Breadcrumbs -->
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
@@ -315,7 +324,7 @@ if ($isDockerChallenge) {
         <?php endif; ?>
     </div>
 
-    <!-- 2. Hero Header Section -->
+    <!-- Hero Header Section -->
     <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-3 mb-4 border-bottom">
         <div>
             <span class="text-uppercase text-muted fw-bold small tracking-wider">CTF Lab Task</span>
@@ -332,7 +341,7 @@ if ($isDockerChallenge) {
         </div>
     </header>
 
-    <!-- 3. Task Details Card -->
+    <!-- Task Details Card -->
     <div class="card card-accent-primary shadow-sm mb-4">
         <div class="card-header bg-transparent d-flex align-items-center py-3">
             <i class="bi bi-journal-text fs-5 text-primary me-2"></i>
@@ -353,7 +362,7 @@ if ($isDockerChallenge) {
         </div>
     </div>
 
-    <!-- 4. Docker Environment Controls (If Applicable) -->
+    <!-- Docker Environment Controls -->
     <?php if ($isDockerChallenge): ?>
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-body-tertiary d-flex align-items-center justify-content-between py-3">
@@ -424,7 +433,7 @@ if ($isDockerChallenge) {
         </div>
     <?php endif; ?>
 
-    <!-- 5. Terminal Flag Submission Section -->
+    <!-- Terminal Flag Submission Section -->
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3"><i class="bi bi-flag-fill text-primary me-2"></i>Submit Flag</h5>
@@ -444,7 +453,7 @@ if ($isDockerChallenge) {
         </div>
     </div>
 
-    <!-- 6. Recent Submissions / Module Data Footer Table -->
+    <!-- Recent Submissions / Module Data Footer Table -->
     <section class="mt-5">
         <h4 class="fw-bold mb-3"><i class="bi bi-activity me-2"></i>Module Logs & Data</h4>
         <div class="table-responsive shadow-sm rounded border">
@@ -467,7 +476,6 @@ if ($isDockerChallenge) {
                         echo '</tr>';
                     }
 
-                    // Empty State Handling
                     if ($rowCount === 0) {
                         echo '<tr><td colspan="2" class="text-center text-muted py-4"><i class="bi bi-inbox fs-3 d-block mb-1"></i>No module activity recorded yet.</td></tr>';
                     }
@@ -522,7 +530,6 @@ if ($isDockerChallenge) {
 <?php endif; ?>
 
 <script>
-    // Copy connection details helper
     function copyConnection(text) {
         navigator.clipboard.writeText(text).then(() => {
             alert('Target address copied to clipboard: ' + text);
@@ -531,7 +538,6 @@ if ($isDockerChallenge) {
         });
     }
 
-    // Theme synchronization with Bootstrap
     function syncBootstrapThemeFromBody() {
         const body = document.body;
         const theme = body.classList.contains('bg-dark') ? 'dark' : 'light';
