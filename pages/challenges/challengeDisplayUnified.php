@@ -2,7 +2,7 @@
 
 /**
  * challengeDisplayUnified.php
- * Enhanced CTF UI with full window width and {HOST_IP} placeholder replacement.
+ * Enhanced CTF UI with full window width and dynamic {HOST_IP} port resolution.
  */
 
 // Start output buffering to prevent accidental whitespace from triggering header errors
@@ -42,7 +42,7 @@ if ($isDockerChallenge) {
 }
 
 // ---------------------------------------------------------
-// IP Address Resolution
+// IP Address & Port Resolution
 // ---------------------------------------------------------
 $rawHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? gethostname();
 $ipAddress = explode(':', $rawHost)[0];
@@ -52,6 +52,13 @@ if ($ipAddress === 'localhost' || $ipAddress === '127.0.0.1') {
     if (filter_var($resolvedIP, FILTER_VALIDATE_IP)) {
         $ipAddress = $resolvedIP;
     }
+}
+
+// Detect server port and attach to host if running on non-standard HTTP/HTTPS port
+$serverPort = $_SERVER['SERVER_PORT'] ?? '80';
+$hostWithPort = $ipAddress;
+if (!in_array((string)$serverPort, ['80', '443'], true)) {
+    $hostWithPort .= ':' . $serverPort;
 }
 
 /* ------------ FUNCTIONS (Common) ------------- */
@@ -101,7 +108,7 @@ function http_post_json(string $url, array $payload, int $timeout = 4): array
 
 function loadChallengeData()
 {
-    global $conn, $challengeToLoad, $challengeID, $title, $challengeText, $pointsValue, $difficulty, $flag, $projectID, $files, $image, $isDockerChallenge, $ipAddress;
+    global $conn, $challengeToLoad, $challengeID, $title, $challengeText, $pointsValue, $difficulty, $flag, $projectID, $files, $image, $isDockerChallenge, $hostWithPort;
 
     $cols = "ID, challengeTitle, challengeText, pointsValue, difficulty, flag, files";
     if ($isDockerChallenge) {
@@ -114,9 +121,9 @@ function loadChallengeData()
         $challengeID   = $row["ID"];
         $title         = $row["challengeTitle"];
         
-        // Replace {HOST_IP} placeholder with current server IP address
+        // Replace {HOST_IP} placeholder with host IP and port (if non-standard)
         $rawText       = $row["challengeText"] ?? '';
-        $challengeText = str_replace('{HOST_IP}', $ipAddress, $rawText);
+        $challengeText = str_replace('{HOST_IP}', $hostWithPort, $rawText);
 
         $pointsValue   = $row["pointsValue"];
         $difficulty    = $row["difficulty"] ?? 1;
