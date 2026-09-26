@@ -81,6 +81,11 @@ const unsigned long updateInterval = 5000; // Time between random number updates
 #define trafficYELLOW 27
 #define trafficGREEN 33
 
+// Variables for the 5-second reset timer
+bool resetPending = false;
+unsigned long resetStartTime = 0;
+const unsigned long resetDelay = 5000; // 5 seconds
+
 
 int trafficlightSPEED = 3000;
 int trafficlightBOOLEANSWITCHOFF = 5000;
@@ -106,39 +111,16 @@ unsigned long interval = trafficlightSPEED;
 
 void performActionBasedOnPayload(byte *payload)
 {
-  // Implement your action logic here based on the payload
-  // For example, if the payload represents a number, you could convert it and use it to control a motor speed
-  // Add your action code here
-
-  /*
-  Example: turn on/off an LED based on the message received (this is specialised, if you dont need it dont use it.)
-
-  if ((char)payload[0] == '1') {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-  } else {
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-
-  Example: turn on/off an LED based on ANY message received (this is how this is intended to work, activating when this ESP32's respective
-  challenge is completed)
-
-  if ((char)payload[0]) {
-    Serial.println("LED ON");
-    digitalWrite(redLEDPin, HIGH);
-    delay(250);
-    Serial.println("LED OFF");
-    digitalWrite(redLEDPin, LOW);
-  }
-  */
-
-  
   Serial.print("Payload:");
   Serial.println((char)payload[0]);
+  
   if ((char)payload[0] == '1') {
     Serial.println("SPEED UP");
     trafficlightSPEED = 50;
+    
+    // Start the 5-second reset timer
+    resetPending = true;
+    resetStartTime = millis();
   } else {
     Serial.println("SPEED DOWN");
     trafficlightSPEED = 3000;
@@ -187,32 +169,14 @@ void sendDataToServer(String topic, String temp)
 
 void sendPeriodicUpdate()
 {
-  // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
-  unsigned long now = millis();
-  if (now - lastUpdate >= updateInterval)
+  // Check if we are waiting to reset the challenge back to "0"
+  if (resetPending && (millis() - resetStartTime >= resetDelay))
   {
-    lastUpdate = now; // Reset the timer
+    resetPending = false; // Reset the flag so it only happens once per trigger
     
-    // 2. Data: Generate a random "sensor" value between 0 and 100,000
-    //long
-    // float temp = adt.readTempC();
-
-    // 3. Topic: Construct the special update topic
-    // We use "updateChallenges/" so the server knows this is incoming data
     String updateTopic = "updateChallenges/" + String(mqttClient);
-    
-    // 4. Transmit: Use the helper function to send the data to the broker
-    // THIS THING isn't letting the challenge module value be updated to a "1".
-     // 1. Timer: Check if 5 seconds (updateInterval) have passed since the last update
-  
-      // sendDataToServer(updateTopic, String("0"));
-   
-    // --- Next steps will go here ---
+    sendDataToServer(updateTopic, String("0"));
   }
-
-  delay(5000);
-  String updateTopic = "updateChallenges/" + String(mqttClient);
-  sendDataToServer(updateTopic, String("0")); 
 }
 
 
