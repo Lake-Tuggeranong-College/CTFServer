@@ -108,11 +108,7 @@ $flash = take_flash();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <title>Cyber City Arena</title> -->
 
-    <script type="text/javascript">
-        function doUnauthRedirect() {
-            location.replace("http://10.177.200.71/index.html");
-        }
-    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <!-- Google Fonts Connection & Embed for Monospace Only -->
