@@ -22,7 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 function test_input($username, $password) {
     # checks if the username and password EXACTLY match the credentials
-    if ($username == "cybercity" && $password == "cyb3rc1ty") {
+    if ($username == "unbreachable" && $password == "unbreachable123") {
         # if both fields are correct, get the CTF flag displayed in the broswer in large green text
         echo "<span style='color:green; font-size:30px;'>Access Granted:CTF{hackdocker}</span>";
         return true;
