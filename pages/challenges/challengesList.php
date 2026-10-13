@@ -352,6 +352,7 @@ function displayResultsByCategory(PDO $conn, int $projectID, ?int $userID): void
 <div class="container-fluid px-3 px-lg-5 py-4">
     <!-- Project Header Section -->
     <div class="project-header shadow-sm">
+        <title><?= $projectTitle ?></title>
         <h1 class="display-5 fw-bold"><?= e($projectTitle) ?></h1>
         <?php if ($projectDescription): ?>
             <p class="lead text-muted mb-0 small" style="font-size: 1.05rem;"><?= nl2br(e($projectDescription)) ?></p>
