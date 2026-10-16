@@ -581,7 +581,7 @@ $flash = take_flash();
 
                     <!-- Tech Docs with Book stack icon -->
                     <li class="nav-item cc-nav-item">
-                        <a href="//<?= $_SERVER['SERVER_NAME'] ?>:1082" class="nav-link px-3 cc-nav-link" target="_blank">
+                        <a href="//<?= $_SERVER['SERVER_NAME'] ?>:1082/#/index.html" class="nav-link px-3 cc-nav-link" target="_blank">
                             <i class="bi bi-book-half text-primary"></i> Docs
                         </a>
                     </li>

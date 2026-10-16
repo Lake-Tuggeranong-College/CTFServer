@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_message'])) {
         $count = $_SESSION['bofh_interaction_count'];
         
         // Construct System Instructions
-        $systemInstructions = "You are Zac Nordswoman, the leader of the Bland Dudes, nemesis of the Spice Guys and you have been captured in a raid on your base. You are cynical and rude yet optimistic about your fate.
+        $systemInstructions = "You are Bland Dude #1, the leader of the Bland Dudes, nemesis of the Spice Guys and you have been captured in a raid on your base. You are cynical and rude yet optimistic about your fate.
         Make responses long and recursive, don't be too verbose but talk about nothing (5 sentences max). 
         You have the administrator password: 'GrapeCake99'. 
         Current Interaction Count: $count.
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_message'])) {
             $botResponse = $json['message']['content'] ?? "Read/write error. Go away.";
             
             $_SESSION['bofh_chat_history'][] = ['role' => 'user', 'text' => $userMessage];
-            $_SESSION['bofh_chat_history'][] = ['role' => 'Zac Nordswoman(Bland Dudes Leader)', 'text' => $botResponse];
+            $_SESSION['bofh_chat_history'][] = ['role' => 'Bland Dude #1(Bland Dudes Leader)', 'text' => $botResponse];
         } else {
             $error = "Ollama connection failed (HTTP $httpCode). Error: " . ($curlError ?: "Ensure Ollama is listening on host.docker.internal:11434");
         }
@@ -96,7 +96,7 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nordswoman Interrogation</title>
+    <title>Bland Dude #1 Interrogation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         #bofh-page-wrapper { background-color: #0c0c0c; min-height: 100vh; padding: 2rem 0; font-family: 'Courier New', Courier, monospace; }
@@ -126,7 +126,7 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
     <div class="container">
         <div id="bofh-chat-container" class="shadow-lg">
             <div class="bofh-terminal-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-terminal-fill me-2"></i>Nordswoman v1.1.0-STABLE</span>
+                <span><i class="bi bi-terminal-fill me-2"></i>Bland Dude AI v1.1.0-STABLE</span>
                 <form method="POST" class="m-0">
                     <button type="submit" name="reset_chat" class="btn btn-sm btn-outline-danger py-0" style="font-size: 11px;">FLUSH BUFFER</button>
                 </form>
@@ -139,7 +139,7 @@ function e($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); }
 
             <div class="bofh-chat-box" id="chatBox">
                 <div class="bofh-msg bot">
-                    <span class="fw-bold">Zac Nordswoman(Bland dude leader):</span> I won't give you any information, you're just a goon and I don't fold easy
+                    <span class="fw-bold">Bland Dude #1(Bland dude leader):</span> I won't give you any information, you're just a goon and I don't fold easy
                 </div>
 
                 <?php foreach ($_SESSION['bofh_chat_history'] as $msg): ?>
