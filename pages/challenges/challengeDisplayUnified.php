@@ -407,9 +407,9 @@ if ($isDockerChallenge) {
                                     <code class="fs-5 fw-bold text-primary" id="dockerTargetCode">
                                         <?= htmlspecialchars($ipAddress) ?>:<?= htmlspecialchars((string)$port) ?>
                                     </code>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyConnection('<?= htmlspecialchars($ipAddress) ?>:<?= htmlspecialchars((string)$port) ?>')">
+                                    <!-- <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyConnection('<?= htmlspecialchars($ipAddress) ?>:<?= htmlspecialchars((string)$port) ?>')">
                                         <i class="bi bi-clipboard me-1"></i>Copy
-                                    </button>
+                                    </button> -->
                                 </div>
                                 <div class="small text-muted mt-2">
                                     <i class="bi bi-clock-history me-1"></i>Auto-Shutdown Target: <strong><?= htmlspecialchars($deletionTime) ?></strong>
