@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -34,7 +33,10 @@ if (!isset($_SESSION['bingo_board'])) {
     $ids = range(0, 24);
     shuffle($ids);
     $_SESSION['bingo_board'] = $ids;
-    $_SESSION['bingo_owners'] = array_fill(0, 25, '');
+    $_SESSION['bingo_owners'] = [
+    'blue' => array_fill(0, 25, false),
+    'red'  => array_fill(0, 25, false),
+];
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -42,7 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ids = range(0, 24);
         shuffle($ids);
         $_SESSION['bingo_board'] = $ids;
-        $_SESSION['bingo_owners'] = array_fill(0, 25, '');
+        $_SESSION['bingo_owners'] = [
+    'blue' => array_fill(0, 25, false),
+    'red'  => array_fill(0, 25, false),
+];
         $_SESSION['bingo_message'] = 'A new board has been generated!';
     } elseif (isset($_POST['square'], $_POST['team'], $_POST['flag'])) {
         $i = filter_var($_POST['square'], FILTER_VALIDATE_INT);
@@ -52,15 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($i === false || $i < 0 || $i > 24 ||
             !in_array($team, ['blue', 'red'], true)) {
             $_SESSION['bingo_message'] = 'Invalid submission.';
-        } elseif ($_SESSION['bingo_owners'][$i] !== '') {
-            $_SESSION['bingo_message'] = 'This square is already claimed.';
+        } elseif ($_SESSION['bingo_owners'][$team][$i]) {
+            $_SESSION['bingo_message'] = 'Your team has already claimed this square.';
         } elseif (!is_string($flag) ||
             !preg_match('/\ACTF\{[^{}\r\n]+\}\z/', $flag)) {
             $_SESSION['bingo_message'] = 'Use the format CTF{XXX}.';
         } else {
             $challengeId = $_SESSION['bingo_board'][$i];
+
             if (hash_equals($challenges[$challengeId][1], $flag)) {
-                $_SESSION['bingo_owners'][$i] = $team;
+                $_SESSION['bingo_owners'][$team][$i] = true;
                 $_SESSION['bingo_message'] =
                     strtoupper($team) . ' TEAM CLAIMED THE SQUARE!';
             } else {
@@ -69,39 +75,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+
     header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
     exit;
 }
 
 $owners = $_SESSION['bingo_owners'];
 
+$blue = count(array_filter($owners['blue']));
+$red  = count(array_filter($owners['red']));
+
+
 function bingo0(array $owners, string $team): int {
     $count = 0;
 
     for ($r = 0; $r < 5; $r++) {
-        $line = true;
-        for ($c = 0; $c < 5; $c++) {
-            if ($owners[$r * 5 + $c] !== $team) $line = false;
-        }
-        if ($line) $count++;
+        $row = true;
+        $col = true;
 
-        $line = true;
         for ($c = 0; $c < 5; $c++) {
-            if ($owners[$c * 5 + $r] !== $team) $line = false;
+            if (!$owners[$team][$r * 5 + $c]) $row = false;
+            if (!$owners[$team][$c * 5 + $r]) $col = false;
         }
-        if ($line) $count++;
+
+        if ($row) $count++;
+        if ($col) $count++;
     }
 
     foreach ([[0,6,12,18,24], [4,8,12,16,20]] as $diagonal) {
         $line = true;
+
         foreach ($diagonal as $i) {
-            if ($owners[$i] !== $team) $line = false;
+            if (!$owners[$team][$i]) $line = false;
         }
+
         if ($line) $count++;
     }
 
     return $count;
 }
+
 
 $blue = count(array_filter($owners, fn($v) => $v === 'blue'));
 $red = count(array_filter($owners, fn($v) => $v === 'red'));
@@ -190,61 +203,105 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 </form>
 </div>
 
+
 <div class="board">
 <?php foreach ($_SESSION['bingo_board'] as $i => $id):
     $owner = $owners[$i];
 ?>
-<button type="button"
-class="cell <?= h($owner) ?>"
-data-i="<?= $i ?>"
-data-title="<?= h($challenges[$id][0]) ?>"
-<?= $owner !== '' ? 'disabled' : '' ?>>
-<span class="num">SQUARE <?= $i+1 ?></span>
-<span class="name"><?= h($challenges[$id][0]) ?></span>
-<?php if ($owner !== ''): ?>
-<span class="owner"><?= strtoupper(h($owner)) ?> CLAIMED</span>
-<?php else: ?>
-<span class="num">UNCLAIMED</span>
-<?php endif; ?>
-</button>
+    <button
+        type="button"
+        class="cell <?= h($owner) ?>"
+        <?= $owner !== '' ? 'disabled' : '' ?>
+        <?= $owner === '' ? 'onclick="openChallenge(' . $i . ')"' : '' ?>
+    >
+        <span class="num">SQUARE <?= $i + 1 ?></span>
+        <span class="name"><?= h($challenges[$id][0]) ?></span>
+
+        <?php if ($owner !== ''): ?>
+            <span class="owner"><?= strtoupper(h($owner)) ?> TEAM</span>
+        <?php endif; ?>
+    </button>
 <?php endforeach; ?>
 </div>
 
-<footer>One bingo = five owned squares in a row, column or diagonal.</footer>
+<footer>
+    CTF Bingo &mdash; Capture squares and complete your lines!
+</footer>
 </div>
 
-<dialog id="claimDialog">
-<h2 id="challengeTitle">Claim square</h2>
-<p class="hint">Enter the exact flag found during the challenge.</p>
-<form method="post">
-<input type="hidden" name="square" id="squareIndex">
-<label>Choose team
-<select name="team" required>
-<option value="blue">🔵 Blue Team</option>
-<option value="red">🔴 Red Team</option>
-</select>
-</label>
-<label>CTF Flag
-<input name="flag" required pattern="CTF\{[^{}\r\n]+\}"
-placeholder="CTF{YOUR_FLAG}" autocomplete="off" spellcheck="false">
-</label>
-<div class="actions">
-<button type="button" id="cancel">Cancel</button>
-<button type="submit" class="submit">Claim Square</button>
-</div>
-</form>
+<dialog id="challengeDialog">
+    <h2 id="challengeTitle">Submit a Flag</h2>
+    <p class="hint">Solve the challenge and enter its flag to claim this square.</p>
+
+    <form method="post" id="challengeForm">
+        <input type="hidden" name="square" id="squareInput">
+
+        <label for="teamInput">Choose your team
+            <select name="team" id="teamInput" required>
+                <option value="blue">Blue Team</option>
+                <option value="red">Red Team</option>
+            </select>
+        </label>
+
+        <label for="flagInput">Flag
+            <input
+                type="text"
+                name="flag"
+                id="flagInput"
+                placeholder="CTF{YOUR_FLAG}"
+                pattern="CTF\{[^{}\r\n]+\}"
+                maxlength="200"
+                required
+                autocomplete="off"
+                spellcheck="false"
+            >
+        </label>
+
+        <div class="actions">
+            <button type="button" id="cancelButton">Cancel</button>
+            <button type="submit" class="submit">Submit Flag</button>
+        </div>
+    </form>
 </dialog>
 
 <script>
-const dlg = document.getElementById('claimDialog');
-document.querySelectorAll('.cell:not(:disabled)').forEach(cell => {
-    cell.addEventListener('click', () => {
-        document.getElementById('squareIndex').value = cell.dataset.i;
-        document.getElementById('challengeTitle').textContent = cell.dataset.title;
-        dlg.showModal();
-    });
+const challengeNames = <?= json_encode(
+    array_map(
+        fn($id) => $challenges[$id][0],
+        $_SESSION['bingo_board']
+    ),
+    JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
+) ?>;
+
+const dialog = document.getElementById('challengeDialog');
+const form = document.getElementById('challengeForm');
+const squareInput = document.getElementById('squareInput');
+const title = document.getElementById('challengeTitle');
+const flagInput = document.getElementById('flagInput');
+
+function openChallenge(index) {
+    squareInput.value = index;
+    title.textContent = challengeNames[index];
+    flagInput.value = '';
+    dialog.showModal();
+    flagInput.focus();
+}
+
+document.getElementById('cancelButton').addEventListener('click', () => {
+    dialog.close();
 });
-document.getElementById('cancel').addEventListener('click', () => dlg.close());
+
+dialog.addEventListener('click', (event) => {
+    if (event.target === dialog) {
+        dialog.close();
+    }
+});
+
+form.addEventListener('submit', (event) => {
+    if (!form.reportValidity()) {
+        event.preventDefault();
+    }
+});
 </script>
 </body>
 </html>
