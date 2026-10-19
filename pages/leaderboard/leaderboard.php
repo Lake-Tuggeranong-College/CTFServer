@@ -14,7 +14,8 @@ if (!authorisedAccess(true, true, true)) {
 $currentUserID = $_SESSION["user_id"] ?? null;
 
 // Query top users with score
-$query = "SELECT ID, Username, Score FROM Users WHERE Enabled=1 ORDER BY Score DESC LIMIT 10";
+// TODO: create a new value in the database that store user's avatar
+$query = "SELECT ID, Username, Score FROM Users WHERE Enabled=1 AND AccessLevel=1 ORDER BY Score DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
 $userScore = $stmt->fetchAll(PDO::FETCH_ASSOC);
