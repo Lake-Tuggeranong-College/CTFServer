@@ -1,7 +1,13 @@
 <?php
 session_start();
 
-const BINGO_ADMIN_PASSWORD = 'ChangeThisToAStrongPassword!';
+const BINGO_DEFAULT_DB = '/data/bingo.sqlite';
+
+$adminPassword = 'BINGO_ADMIN_PASSWORD';
+
+
+$dbPath = getenv('BINGO_DB_PATH') ?: BINGO_DEFAULT_DB;
+
 $challenges = [
     ['Web Exploitation', 'CTF{WEB_EXPLOIT}'],
     ['SQL Injection', 'CTF{SQL_INJECTION}'],
@@ -30,91 +36,89 @@ $challenges = [
     ['Final Challenge', 'CTF{FINAL_BOSS}'],
 ];
 
+// Open the persistent shared database.
+try {
+    $dbDir = dirname($dbPath);
+    if (!is_dir($dbDir) || !is_writable($dbDir)) {
+        throw new RuntimeException('Database directory is not writable.');
+    }
 
-if (
-    !isset($_SESSION['bingo_board']) ||
-    !isset($_SESSION['bingo_owners']['blue']) ||
-    !isset($_SESSION['bingo_owners']['red']) ||
-    !is_array($_SESSION['bingo_owners']['blue']) ||
-    !is_array($_SESSION['bingo_owners']['red'])
-) {
+    $db = new PDO('sqlite:' . $dbPath);
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db->exec('PRAGMA busy_timeout = 5000');
+    $db->exec('PRAGMA journal_mode = WAL');
+
+    $db->exec(
+        'CREATE TABLE IF NOT EXISTS bingo_state (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            state TEXT NOT NULL,
+            version INTEGER NOT NULL DEFAULT 1
+        )'
+    );
+} catch (Throwable $e) {
+    error_log('Bingo database initialization failed: ' . $e->getMessage());
+    http_response_code(500);
+    exit('Unable to initialize the bingo database. Check the server logs and database permissions.');
+}
+
+function newBingoState(): array {
     $ids = range(0, 24);
     shuffle($ids);
 
-    $_SESSION['bingo_board'] = $ids;
-    $_SESSION['bingo_owners'] = [
-        'blue' => array_fill(0, 25, false),
-        'red'  => array_fill(0, 25, false),
+    return [
+        'board' => $ids,
+        'owners' => [
+            'blue' => array_fill(0, 25, false),
+            'red' => array_fill(0, 25, false),
+        ],
     ];
 }
 
+function readBingoState(PDO $db): array {
+    $row = $db->query(
+        'SELECT state FROM bingo_state WHERE id = 1'
+    )->fetch(PDO::FETCH_ASSOC);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['new_game'])) {
-        $password = $_POST['admin_password'] ?? '';
+    if (!$row) {
+        $state = newBingoState();
+        $stmt = $db->prepare(
+            'INSERT OR IGNORE INTO bingo_state (id, state, version)
+             VALUES (1, :state, 1)'
+        );
+        $stmt->execute([
+            ':state' => json_encode($state, JSON_THROW_ON_ERROR),
+        ]);
 
-        if (
-            !is_string($password) ||
-            !hash_equals(BINGO_ADMIN_PASSWORD, $password)
-        ) {
-            $_SESSION['bingo_message'] = 'Incorrect admin password.';
-        } else {
-            $ids = range(0, 24);
-            shuffle($ids);
-
-            $_SESSION['bingo_board'] = $ids;
-            $_SESSION['bingo_owners'] = [
-                'blue' => array_fill(0, 25, false),
-                'red'  => array_fill(0, 25, false),
-            ];
-
-            $_SESSION['bingo_message'] = 'A new board has been generated!';
-        }
-    } elseif (isset($_POST['square'], $_POST['team'], $_POST['flag'])) {
-        $i = filter_var($_POST['square'], FILTER_VALIDATE_INT);
-        $team = $_POST['team'];
-        $flag = $_POST['flag'];
-
-        if (
-            $i === false ||
-            $i < 0 ||
-            $i > 24 ||
-            !in_array($team, ['blue', 'red'], true)
-        ) {
-            $_SESSION['bingo_message'] = 'Invalid submission.';
-        } elseif ($_SESSION['bingo_owners'][$team][$i]) {
-            $_SESSION['bingo_message'] =
-                'Your team has already claimed this square.';
-        } elseif (
-            !is_string($flag) ||
-            !preg_match('/\ACTF\{[^{}\r\n]+\}\z/', $flag)
-        ) {
-            $_SESSION['bingo_message'] = 'Use the format CTF{XXX}.';
-        } else {
-            $challengeId = $_SESSION['bingo_board'][$i];
-
-            if (hash_equals($challenges[$challengeId][1], $flag)) {
-                $_SESSION['bingo_owners'][$team][$i] = true;
-
-                $_SESSION['bingo_message'] =
-                    strtoupper($team) . ' TEAM CLAIMED THE SQUARE!';
-            } else {
-                $_SESSION['bingo_message'] = 'Incorrect flag!';
-            }
-        }
+        // Another request may have initialized it first.
+        $row = $db->query(
+            'SELECT state FROM bingo_state WHERE id = 1'
+        )->fetch(PDO::FETCH_ASSOC);
     }
 
+    $state = json_decode($row['state'], true, 512, JSON_THROW_ON_ERROR);
 
+    if (
+        !isset($state['board'], $state['owners']['blue'], $state['owners']['red']) ||
+        count($state['board']) !== 25 ||
+        count($state['owners']['blue']) !== 25 ||
+        count($state['owners']['red']) !== 25
+    ) {
+        throw new RuntimeException('Stored bingo state is invalid.');
+    }
 
-    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
-    exit;
+    return $state;
 }
 
-$owners = $_SESSION['bingo_owners'];
-
-$blue = count(array_filter($owners['blue']));
-$red  = count(array_filter($owners['red']));
-
+function saveBingoState(PDO $db, array $state): void {
+    $stmt = $db->prepare(
+        'UPDATE bingo_state
+         SET state = :state, version = version + 1
+         WHERE id = 1'
+    );
+    $stmt->execute([
+        ':state' => json_encode($state, JSON_THROW_ON_ERROR),
+    ]);
+}
 
 function bingo0(array $owners, string $team): int {
     $count = 0;
@@ -132,7 +136,7 @@ function bingo0(array $owners, string $team): int {
         if ($col) $count++;
     }
 
-    foreach ([[0,6,12,18,24], [4,8,12,16,20]] as $diagonal) {
+    foreach ([[0, 6, 12, 18, 24], [4, 8, 12, 16, 20]] as $diagonal) {
         $line = true;
 
         foreach ($diagonal as $i) {
@@ -145,11 +149,123 @@ function bingo0(array $owners, string $team): int {
     return $count;
 }
 
+function bingoJson(array $data, int $status = 200): never {
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo json_encode($data, JSON_THROW_ON_ERROR);
+    exit;
+}
 
-$owners = $_SESSION['bingo_owners'];
+// The polling endpoint returns the one shared state to every device.
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
+    if ($_GET['api'] !== 'state') {
+        bingoJson(['ok' => false, 'message' => 'Unknown API endpoint.'], 404);
+    }
 
+    try {
+        $state = readBingoState($db);
+        $version = (int) $db->query(
+            'SELECT version FROM bingo_state WHERE id = 1'
+        )->fetchColumn();
+
+        bingoJson([
+            'ok' => true,
+            'version' => $version,
+            'board' => $state['board'],
+            'owners' => $state['owners'],
+            'scores' => [
+                'blue' => count(array_filter($state['owners']['blue'])),
+                'red' => count(array_filter($state['owners']['red'])),
+            ],
+            'lines' => [
+                'blue' => bingo0($state['owners'], 'blue'),
+                'red' => bingo0($state['owners'], 'red'),
+            ],
+        ]);
+    } catch (Throwable $e) {
+        error_log('Bingo state read failed: ' . $e->getMessage());
+        bingoJson(['ok' => false, 'message' => 'Unable to read game state.'], 500);
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        // Serialize state changes so simultaneous claims cannot overwrite each other.
+        $db->exec('BEGIN IMMEDIATE');
+
+        try {
+            $state = readBingoState($db);
+
+            if (isset($_POST['new_game'])) {
+                $password = $_POST['admin_password'] ?? '';
+
+                if (
+                    !is_string($password) ||
+                    !hash_equals($adminPassword, $password)
+                ) {
+                    $_SESSION['bingo_message'] = 'Incorrect admin password.';
+                } else {
+                    $state = newBingoState();
+                    saveBingoState($db, $state);
+                    $_SESSION['bingo_message'] = 'A new board has been generated!';
+                }
+            } elseif (isset($_POST['square'], $_POST['team'], $_POST['flag'])) {
+                $i = filter_var($_POST['square'], FILTER_VALIDATE_INT);
+                $team = $_POST['team'];
+                $flag = $_POST['flag'];
+
+                if (
+                    $i === false ||
+                    $i < 0 ||
+                    $i > 24 ||
+                    !in_array($team, ['blue', 'red'], true)
+                ) {
+                    $_SESSION['bingo_message'] = 'Invalid submission.';
+                } elseif ($state['owners'][$team][$i]) {
+                    $_SESSION['bingo_message'] =
+                        'Your team has already claimed this square.';
+                } elseif (
+                    !is_string($flag) ||
+                    !preg_match('/\ACTF\{[^{}\r\n]+\}\z/', $flag)
+                ) {
+                    $_SESSION['bingo_message'] = 'Use the format CTF{XXX}.';
+                } else {
+                    $challengeId = $state['board'][$i];
+
+                    if (hash_equals($challenges[$challengeId][1], $flag)) {
+                        $state['owners'][$team][$i] = true;
+                        saveBingoState($db, $state);
+
+                        $_SESSION['bingo_message'] =
+                            strtoupper($team) . ' TEAM CLAIMED THE SQUARE!';
+                    } else {
+                        $_SESSION['bingo_message'] = 'Incorrect flag!';
+                    }
+                }
+            }
+
+            $db->exec('COMMIT');
+        } catch (Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->exec('ROLLBACK');
+            }
+            throw $e;
+        }
+    } catch (Throwable $e) {
+        error_log('Bingo update failed: ' . $e->getMessage());
+        http_response_code(500);
+        exit('Unable to update the game. Check the server logs.');
+    }
+
+    header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
+    exit;
+}
+
+$state = readBingoState($db);
+$owners = $state['owners'];
 $blue = count(array_filter($owners['blue']));
-$red  = count(array_filter($owners['red']));
+$red = count(array_filter($owners['red']));
 $message = $_SESSION['bingo_message'] ?? '';
 unset($_SESSION['bingo_message']);
 
@@ -157,6 +273,7 @@ function h(string $s): string {
     return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -226,13 +343,15 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 <div class="scores">
 <div class="score blue">
 <h2>🔵 BLUE TEAM</h2>
-<strong><?= $blue ?></strong> <span>/ 25 squares</span>
-<p><?= bingo0($owners,'blue') ?> completed bingo lines</p>
+<strong id="blueScore"><?= $blue ?></strong>
+<span>/ 25 squares</span>
+<p><span id="blueLines"><?= bingo0($owners, 'blue') ?></span> completed bingo lines</p>
 </div>
 <div class="score red">
 <h2>🔴 RED TEAM</h2>
-<strong><?= $red ?></strong> <span>/ 25 squares</span>
-<p><?= bingo0($owners,'red') ?> completed bingo lines</p>
+<strong id="redScore"><?= $red ?></strong>
+<span>/ 25 squares</span>
+<p><span id="redLines"><?= bingo0($owners, 'red') ?></span> completed bingo lines</p>
 </div>
 </div>
 
@@ -286,7 +405,7 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 
 
 <div class="board">
-<?php foreach ($_SESSION['bingo_board'] as $i => $id):
+<?php foreach ($state['board'] as $i => $id):
     $blueClaimed = $owners['blue'][$i];
     $redClaimed  = $owners['red'][$i];
 
@@ -297,6 +416,7 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 ?>
     <button
         type="button"
+        data-square="<?= $i ?>"
         class="<?= h($classes) ?>"
         onclick="openChallenge(<?= $i ?>)"
     >
@@ -362,7 +482,7 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 const challengeNames = <?= json_encode(
     array_map(
         fn($id) => $challenges[$id][0],
-        $_SESSION['bingo_board']
+        $state['board']
     ),
     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
 ) ?>;
@@ -396,6 +516,85 @@ form.addEventListener('submit', (event) => {
         event.preventDefault();
     }
 });
+
+
+let lastBingoVersion = null;
+let bingoPollInProgress = false;
+
+function updateBingoBoard(state) {
+    if (state.version === lastBingoVersion) return;
+
+    lastBingoVersion = state.version;
+
+    document.getElementById('blueScore').textContent = state.scores.blue;
+    document.getElementById('redScore').textContent = state.scores.red;
+    document.getElementById('blueLines').textContent = state.lines.blue;
+    document.getElementById('redLines').textContent = state.lines.red;
+
+    state.board.forEach((challengeId, i) => {
+        const cell = document.querySelector(`[data-square="${i}"]`);
+        if (!cell) return;
+
+        const blue = state.owners.blue[i];
+        const red = state.owners.red[i];
+
+        cell.classList.remove('blue', 'red', 'both');
+
+        if (blue) cell.classList.add('blue');
+        if (red) cell.classList.add('red');
+        if (blue && red) cell.classList.add('both');
+
+        let owner = cell.querySelector('.owner');
+
+        if (blue || red) {
+            if (!owner) {
+                owner = document.createElement('span');
+                owner.className = 'owner';
+                cell.appendChild(owner);
+            }
+
+            owner.textContent = blue && red
+                ? 'BLUE + RED'
+                : blue ? 'BLUE TEAM' : 'RED TEAM';
+        } else if (owner) {
+            owner.remove();
+        }
+    });
+}
+
+async function syncBingoBoard() {
+    if (bingoPollInProgress) return;
+
+    bingoPollInProgress = true;
+
+    try {
+        const response = await fetch('?api=state', {
+            method: 'GET',
+            cache: 'no-store',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error('Unable to fetch bingo state');
+        }
+
+        const state = await response.json();
+
+        if (state.ok) {
+            updateBingoBoard(state);
+        }
+    } catch (error) {
+        // A temporary network failure shouldn't break the board.
+        console.warn('Bingo synchronization failed:', error);
+    } finally {
+        bingoPollInProgress = false;
+    }
+}
+
+// Synchronize immediately, then every two seconds.
+syncBingoBoard();
+setInterval(syncBingoBoard, 2000);
+
 </script>
 </body>
 </html>
