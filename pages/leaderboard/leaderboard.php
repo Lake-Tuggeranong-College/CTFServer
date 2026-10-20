@@ -1,10 +1,10 @@
 <?php
-
 $sec = 30;
 $page = $_SERVER['PHP_SELF'];
 
 header("Refresh:$sec; url=$page");
 include_once "../../includes/template.php";
+/** @var PDO $conn */
 
 if (!authorisedAccess(true, true, true)) {
     header("Location:../../index.php");
@@ -32,6 +32,24 @@ if (isset($topThreeRaw[2])) $podiumOrder[] = ['rank' => 3, 'class' => 'podium-th
 // Helper to generate dynamic user initials
 function getInitials($username) {
     return strtoupper(substr(trim($username), 0, 2));
+}
+
+function getProfilePicture($userId) {
+    // Physical directory where editAccount.php saves uploaded images.
+    $directory = "/var/www" . BASE_URL . "html/assets/img/profilePictures/";
+
+    // Public URL: your template loads other assets from BASE_URL . "assets/..."
+    $url = BASE_URL . "assets/img/profilePictures/";
+
+    foreach (['jpg', 'jpeg', 'png', 'webp'] as $extension) {
+        $file = $directory . $userId . '.' . $extension;
+
+        if (is_file($file)) {
+            return $url . $userId . '.' . $extension . '?v=' . filemtime($file);
+        }
+    }
+
+    return null;
 }
 ?>
 
@@ -148,9 +166,20 @@ function getInitials($username) {
                 <!-- Rank Badge -->
                 <span class="badge bg-dark mb-2">#<?= $podium['rank'] ?> Place</span>
 
-                <!-- Avatar with Fallback Initials -->
-                <div class="avatar-circle bg-primary text-white">
-                    <?= getInitials($podium['data']['Username']) ?>
+                <!-- Avatar with Profile Picture or Fallback Initials -->
+                <div class="avatar-circle bg-primary text-white overflow-hidden">
+                    <?php $profilePicture = getProfilePicture($podium['data']['ID']); ?>
+
+                    <?php if ($profilePicture !== null): ?>
+                        <img
+                            src="<?= htmlspecialchars($profilePicture) ?>"
+                            alt="<?= htmlspecialchars($podium['data']['Username']) ?>'s profile picture"
+                            class="w-100 h-100"
+                            style="object-fit: cover;"
+                        >
+                    <?php else: ?>
+                        <?= htmlspecialchars(getInitials($podium['data']['Username'])) ?>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Username & Score -->
@@ -190,9 +219,23 @@ function getInitials($username) {
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center">
-                                        <div class="avatar-circle bg-secondary text-white me-3 mb-0" style="width:38px; height:38px; font-size:0.9rem;">
-                                            <?= getInitials($userData['Username']) ?>
-                                        </div>
+                                        <div class="avatar-circle bg-secondary text-white me-3 mb-0 overflow-hidden" 
+                                            style="width:38px; height:38px; font-size:0.9rem; flex-shrink:0;">
+
+                                        <?php $profilePicture = getProfilePicture($userData['ID']); ?>
+
+                                        <?php if ($profilePicture !== null): ?>
+                                        <img
+                                            src="<?= htmlspecialchars($profilePicture) ?>"
+                                            alt="<?= htmlspecialchars($userData['Username']) ?>'s profile picture"
+                                            class="w-100 h-100"
+                                            style="object-fit: cover;"
+                                            >
+                                        <?php else: ?>
+                                            <?= htmlspecialchars(getInitials($userData['Username'])) ?>
+                                        <?php endif; ?>
+
+                                    </div>
                                         <span><?= htmlspecialchars($userData['Username']) ?></span>
                                         <?php if ($isCurrentUser): ?>
                                             <span class="badge bg-primary ms-2">You</span>

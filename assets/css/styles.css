@@ -171,3 +171,57 @@ body.bg-light .form-text {
 body.bg-dark .form-text {
     color: #f0f0f0; /* Light color for dark mode */
 }
+
+/* Light mode cards */
+body.bg-light .card {
+    background-color: #ffffff;
+    color: #212529;
+    border-color: #dee2e6;
+}
+
+/* Dark mode cards */
+body.bg-dark .card {
+    background-color: #1e293b;
+    color: #cbd5e1;
+    border-color: #334155;
+}
+
+/* Card headings in dark mode */
+body.bg-dark .card .card-title,
+body.bg-dark .card h1,
+body.bg-dark .card h2,
+body.bg-dark .card h3,
+body.bg-dark .card h4,
+body.bg-dark .card h5,
+body.bg-dark .card h6 {
+    color: #f8fafc !important;
+}
+
+/* Card text in dark mode */
+body.bg-dark .card .card-text {
+    color: #cbd5e1;
+}
+
+/* Nested card bodies */
+body.bg-dark .card .card-body {
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Smooth transitions */
+.home-hero,
+.home-card {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* LIGHT MODE */
+body.bg-light .home-hero {
+    background-color: #f1f5f9;
+    color: #0f172a;
+}
+
+body.bg-light .home-card {
+    background-color: #ffffff;
+    color: #334155;
+    border: 1px solid #e2e8f0 !important;
+}
