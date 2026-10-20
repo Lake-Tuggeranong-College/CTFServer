@@ -4,5 +4,7 @@ RUN docker-php-ext-install pdo pdo_mysql
 RUN a2enmod rewrite
 RUN chown -R www-data:www-data /var/www/html
 
-COPY blandWebpage.php /var/www/html/index.php
+COPY index.php /var/www/html/index.php
 COPY Beige.jpeg /var/www/html/Beige.jpeg
+
+EXPOSE 80
