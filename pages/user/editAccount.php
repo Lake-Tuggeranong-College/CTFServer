@@ -3,7 +3,7 @@ ob_start();
 include_once "../../includes/template.php";
 
 /** @var $conn */
-if (!authorisedAccess(false, false, true)) {
+if (!authorisedAccess(false, true, true)) {
     header("Location:../../index.php");
     exit;
 }

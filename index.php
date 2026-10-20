@@ -18,7 +18,7 @@
                         <i class="bi bi-person-check-fill"></i> ACTIVE CONNECTION: <?php echo htmlspecialchars($_SESSION["username"]); ?>
                     </div>
                     <p class="lead">The mainframe is open. Your contribution to the resistance is vital.</p>
-                    <a href="pages/challenges/challengesList.php?projectID=2025" class="btn btn-primary btn-lg mt-2">Enter the City</a>
+                    <a href="pages/challenges/challengesList.php?projectID=2026" class="btn btn-primary btn-lg mt-2">Enter the City</a>
                 <?php else: ?>
                     <div class="badge rounded-pill text-bg-warning mb-3 p-2 px-3">
                         <i class="bi bi-shield-lock-fill"></i> ENCRYPTED ACCESS ONLY
