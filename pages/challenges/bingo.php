@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+const BINGO_ADMIN_PASSWORD = 'ChangeThisToAStrongPassword!';
 $challenges = [
     ['Web Exploitation', 'CTF{WEB_EXPLOIT}'],
     ['SQL Injection', 'CTF{SQL_INJECTION}'],
@@ -29,44 +30,72 @@ $challenges = [
     ['Final Challenge', 'CTF{FINAL_BOSS}'],
 ];
 
-if (!isset($_SESSION['bingo_board'])) {
+
+if (
+    !isset($_SESSION['bingo_board']) ||
+    !isset($_SESSION['bingo_owners']['blue']) ||
+    !isset($_SESSION['bingo_owners']['red']) ||
+    !is_array($_SESSION['bingo_owners']['blue']) ||
+    !is_array($_SESSION['bingo_owners']['red'])
+) {
     $ids = range(0, 24);
     shuffle($ids);
+
     $_SESSION['bingo_board'] = $ids;
     $_SESSION['bingo_owners'] = [
-    'blue' => array_fill(0, 25, false),
-    'red'  => array_fill(0, 25, false),
-];
+        'blue' => array_fill(0, 25, false),
+        'red'  => array_fill(0, 25, false),
+    ];
 }
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['new_game'])) {
-        $ids = range(0, 24);
-        shuffle($ids);
-        $_SESSION['bingo_board'] = $ids;
-        $_SESSION['bingo_owners'] = [
-    'blue' => array_fill(0, 25, false),
-    'red'  => array_fill(0, 25, false),
-];
-        $_SESSION['bingo_message'] = 'A new board has been generated!';
+        $password = $_POST['admin_password'] ?? '';
+
+        if (
+            !is_string($password) ||
+            !hash_equals(BINGO_ADMIN_PASSWORD, $password)
+        ) {
+            $_SESSION['bingo_message'] = 'Incorrect admin password.';
+        } else {
+            $ids = range(0, 24);
+            shuffle($ids);
+
+            $_SESSION['bingo_board'] = $ids;
+            $_SESSION['bingo_owners'] = [
+                'blue' => array_fill(0, 25, false),
+                'red'  => array_fill(0, 25, false),
+            ];
+
+            $_SESSION['bingo_message'] = 'A new board has been generated!';
+        }
     } elseif (isset($_POST['square'], $_POST['team'], $_POST['flag'])) {
         $i = filter_var($_POST['square'], FILTER_VALIDATE_INT);
         $team = $_POST['team'];
         $flag = $_POST['flag'];
 
-        if ($i === false || $i < 0 || $i > 24 ||
-            !in_array($team, ['blue', 'red'], true)) {
+        if (
+            $i === false ||
+            $i < 0 ||
+            $i > 24 ||
+            !in_array($team, ['blue', 'red'], true)
+        ) {
             $_SESSION['bingo_message'] = 'Invalid submission.';
         } elseif ($_SESSION['bingo_owners'][$team][$i]) {
-            $_SESSION['bingo_message'] = 'Your team has already claimed this square.';
-        } elseif (!is_string($flag) ||
-            !preg_match('/\ACTF\{[^{}\r\n]+\}\z/', $flag)) {
+            $_SESSION['bingo_message'] =
+                'Your team has already claimed this square.';
+        } elseif (
+            !is_string($flag) ||
+            !preg_match('/\ACTF\{[^{}\r\n]+\}\z/', $flag)
+        ) {
             $_SESSION['bingo_message'] = 'Use the format CTF{XXX}.';
         } else {
             $challengeId = $_SESSION['bingo_board'][$i];
 
             if (hash_equals($challenges[$challengeId][1], $flag)) {
                 $_SESSION['bingo_owners'][$team][$i] = true;
+
                 $_SESSION['bingo_message'] =
                     strtoupper($team) . ' TEAM CLAIMED THE SQUARE!';
             } else {
@@ -74,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
+
 
 
     header('Location: ' . strtok($_SERVER['REQUEST_URI'], '?'));
@@ -116,8 +146,10 @@ function bingo0(array $owners, string $team): int {
 }
 
 
-$blue = count(array_filter($owners, fn($v) => $v === 'blue'));
-$red = count(array_filter($owners, fn($v) => $v === 'red'));
+$owners = $_SESSION['bingo_owners'];
+
+$blue = count(array_filter($owners['blue']));
+$red  = count(array_filter($owners['red']));
 $message = $_SESSION['bingo_message'] ?? '';
 unset($_SESSION['bingo_message']);
 
@@ -158,6 +190,14 @@ button{font:inherit;cursor:pointer}
 .cell .name{font-size:clamp(.62rem,1.5vw,.95rem);font-weight:bold}
 .cell .owner{font-size:.7rem;font-weight:bold}
 .blue .owner{color:#65b8ff}.red .owner{color:#ff8793}
+.cell.both {
+    background: linear-gradient(135deg, #103459 50%, #421e2a 50%);
+    border: 2px solid #b5a5ff;
+}
+
+.cell.both .owner {
+    color: #e0d5ff;
+}
 .message{padding:12px;border-radius:8px;background:#192941;margin-bottom:15px}
 dialog{width:min(400px,calc(100% - 24px));background:#141e32;color:white;border:1px solid #40516f;border-radius:14px;padding:24px}
 dialog::backdrop{background:#000b}
@@ -198,27 +238,81 @@ footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
 
 <div class="toolbar">
 <span class="hint">Click an unclaimed square to submit a flag.</span>
-<form method="post" onsubmit="return confirm('Reset scores and shuffle the board?')">
-<button class="new-game" type="submit" name="new_game" value="1">↻ New Game</button>
+
+<form method="post" id="newGameForm">
+    <label for="adminPassword" class="sr-only">Admin password</label>
+    <input
+        type="password"
+        name="admin_password"
+        id="adminPassword"
+        placeholder="Admin password"
+        autocomplete="current-password"
+        required
+    >
+    <button
+        class="new-game"
+        type="submit"
+        name="new_game"
+        value="1"
+        onclick="return confirm('Reset scores and shuffle the board?')"
+    >↻ New Game</button>
 </form>
+
 </div>
+<style>
+#newGameForm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#newGameForm input {
+    width: 180px;
+    margin-top: 0;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+</style>
 
 
 <div class="board">
 <?php foreach ($_SESSION['bingo_board'] as $i => $id):
-    $owner = $owners[$i];
+    $blueClaimed = $owners['blue'][$i];
+    $redClaimed  = $owners['red'][$i];
+
+    $classes = 'cell';
+    if ($blueClaimed) $classes .= ' blue';
+    if ($redClaimed)  $classes .= ' red';
+    if ($blueClaimed && $redClaimed) $classes .= ' both';
 ?>
     <button
         type="button"
-        class="cell <?= h($owner) ?>"
-        <?= $owner !== '' ? 'disabled' : '' ?>
-        <?= $owner === '' ? 'onclick="openChallenge(' . $i . ')"' : '' ?>
+        class="<?= h($classes) ?>"
+        onclick="openChallenge(<?= $i ?>)"
     >
         <span class="num">SQUARE <?= $i + 1 ?></span>
         <span class="name"><?= h($challenges[$id][0]) ?></span>
 
-        <?php if ($owner !== ''): ?>
-            <span class="owner"><?= strtoupper(h($owner)) ?> TEAM</span>
+        <?php if ($blueClaimed || $redClaimed): ?>
+            <span class="owner">
+                <?php if ($blueClaimed && $redClaimed): ?>
+                    BLUE + RED
+                <?php elseif ($blueClaimed): ?>
+                    BLUE TEAM
+                <?php else: ?>
+                    RED TEAM
+                <?php endif; ?>
+            </span>
         <?php endif; ?>
     </button>
 <?php endforeach; ?>
