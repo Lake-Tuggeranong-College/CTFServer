@@ -1,8 +1,0 @@
-services:
-
-  sshtest-server:
-      build: ./ssh
-      container_name: BACTA-ssh
-      ports:
-        - "${SSH_PORT}:22"
-      restart: unless-stopped
