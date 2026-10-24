@@ -1,0 +1,8 @@
+services:
+
+  sshtest-server:
+      build: .
+      container_name: sshhack-${PORT}
+      ports:
+        - "${PORT}:22"
+      restart: unless-stopped
