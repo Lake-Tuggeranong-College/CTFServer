@@ -1,12 +1,11 @@
 <?php
 session_start();
+require_once __DIR__ . '/../../includes/config.php';
+/** @var PDO $conn */
 
-const BINGO_DEFAULT_DB = '/data/bingo.sqlite';
+$db = $conn;
 
 $adminPassword = 'BINGO_ADMIN_PASSWORD';
-
-
-$dbPath = getenv('BINGO_DB_PATH') ?: BINGO_DEFAULT_DB;
 
 $challenges = [
     ['Web Exploitation', 'CTF{WEB_EXPLOIT}'],
@@ -36,24 +35,14 @@ $challenges = [
     ['Final Challenge', 'CTF{FINAL_BOSS}'],
 ];
 
-// Open the persistent shared database.
+// Use the shared CyberCity database rather than a local SQLite file.
 try {
-    $dbDir = dirname($dbPath);
-    if (!is_dir($dbDir) || !is_writable($dbDir)) {
-        throw new RuntimeException('Database directory is not writable.');
-    }
-
-    $db = new PDO('sqlite:' . $dbPath);
-    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $db->exec('PRAGMA busy_timeout = 5000');
-    $db->exec('PRAGMA journal_mode = WAL');
-
     $db->exec(
         'CREATE TABLE IF NOT EXISTS bingo_state (
-            id INTEGER PRIMARY KEY CHECK (id = 1),
-            state TEXT NOT NULL,
-            version INTEGER NOT NULL DEFAULT 1
-        )'
+            id INT NOT NULL PRIMARY KEY,
+            state LONGTEXT NOT NULL,
+            version INT NOT NULL DEFAULT 1
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
     );
 } catch (Throwable $e) {
     error_log('Bingo database initialization failed: ' . $e->getMessage());
@@ -82,14 +71,13 @@ function readBingoState(PDO $db): array {
     if (!$row) {
         $state = newBingoState();
         $stmt = $db->prepare(
-            'INSERT OR IGNORE INTO bingo_state (id, state, version)
+            'INSERT INTO bingo_state (id, state, version)
              VALUES (1, :state, 1)'
         );
         $stmt->execute([
             ':state' => json_encode($state, JSON_THROW_ON_ERROR),
         ]);
 
-        // Another request may have initialized it first.
         $row = $db->query(
             'SELECT state FROM bingo_state WHERE id = 1'
         )->fetch(PDO::FETCH_ASSOC);
@@ -191,8 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
-        // Serialize state changes so simultaneous claims cannot overwrite each other.
-        $db->exec('BEGIN IMMEDIATE');
+        $db->beginTransaction();
 
         try {
             $state = readBingoState($db);
@@ -245,10 +232,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
-            $db->exec('COMMIT');
+            $db->commit();
         } catch (Throwable $e) {
             if ($db->inTransaction()) {
-                $db->exec('ROLLBACK');
+                $db->rollBack();
             }
             throw $e;
         }
@@ -298,7 +285,7 @@ header p{color:#93a4c3}
 button{font:inherit;cursor:pointer}
 .new-game{border:0;border-radius:8px;padding:11px 16px;background:#293853;color:white}
 .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.cell{aspect-ratio:1;min-width:0;padding:7px;background:#141e32;color:#eaf1ff;border:1px solid #293853;border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;text-align:center;overflow-wrap:anywhere}
+.cell{aspect-ratio:1;min-width:0;padding:7px;background:#141e32;color:#eaf1ff;border:1px solid #293853;border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px}
 .cell:hover:not(:disabled){border-color:#91b6ff;background:#1b2943}
 .cell.blue{background:#103459;border:2px solid #329cff}
 .cell.red{background:#421e2a;border:2px solid #ff5364}
@@ -326,7 +313,7 @@ input,select{display:block;width:100%;padding:12px;margin-top:7px;background:#0b
 .actions .submit{background:#167bd0}
 .hint{color:#a7b5cd;font-size:.85rem}
 footer{text-align:center;color:#899ab8;font-size:.8rem;margin-top:22px}
-@media(max-width:500px){body{padding:18px 8px}.board{gap:4px}.cell{padding:3px;gap:4px;border-radius:5px}.cell .num,.cell .owner{font-size:.55rem}.toolbar{align-items:flex-start}.new-game{padding:9px;font-size:.85rem}}
+@media(max-width:500px){body{padding:18px 8px}.board{gap:4px}.cell{padding:3px;gap:4px;border-radius:5px}.cell .num,.cell .owner{font-size:.55rem}.toolbar{align-items:flex-start}.new-game{padding:10px 12px}}
 </style>
 </head>
 <body>
@@ -517,7 +504,6 @@ form.addEventListener('submit', (event) => {
     }
 });
 
-
 let lastBingoVersion = null;
 let bingoPollInProgress = false;
 
@@ -584,17 +570,14 @@ async function syncBingoBoard() {
             updateBingoBoard(state);
         }
     } catch (error) {
-        // A temporary network failure shouldn't break the board.
         console.warn('Bingo synchronization failed:', error);
     } finally {
         bingoPollInProgress = false;
     }
 }
 
-// Synchronize immediately, then every two seconds.
 syncBingoBoard();
 setInterval(syncBingoBoard, 2000);
-
 </script>
 </body>
 </html>
