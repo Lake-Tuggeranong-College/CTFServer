@@ -588,7 +588,7 @@ $flash = take_flash();
 
                     <!-- Feedback with Signal Transmission icon -->
                     <li class="nav-item cc-nav-item">
-                        <a href="https://forms.gle/jgYrmMZesgtVhBZ39" class="nav-link px-3 cc-nav-link" target="_blank">
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSel19klftg63BgG2yAMrCPKuZaU0AZdYziMsr4jQjonr59l5g/viewform?usp=publish-editor" class="nav-link px-3 cc-nav-link" target="_blank">
                             <i class="bi bi-send-check text-success"></i> Feedback
                         </a>
                     </li>
