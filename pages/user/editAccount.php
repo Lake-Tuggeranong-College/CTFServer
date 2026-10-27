@@ -2,13 +2,13 @@
 ob_start();
 include_once "../../includes/template.php";
 
-/** @var $conn */
+/** @var PDO $conn */
 if (!authorisedAccess(false, true, true)) {
     header("Location:../../index.php");
     exit;
 }
 
-// Use the same asset-directory convention as challengeCreate.php.
+//Avatar directory
 $avatarDirectory = rtrim($_SERVER['DOCUMENT_ROOT'], '/') . '/assets/img/profilePictures/';
 $avatarUrlDirectory = '/assets/img/profilePictures/';
 $allowedMimeTypes = [

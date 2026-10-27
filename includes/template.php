@@ -125,7 +125,7 @@ $flash = take_flash();
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/moduleList.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/leaderboard.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/editAccount.css">
-    <link class="cc-favicon" rel="icon" type="image/png" href="<?= BASE_URL; ?>assets/img/CCLogo.png">
+    <link class="cc-favicon" rel="icon" type="image/png" href="<?= BASE_URL; ?>assets/img/logoCorp.png">
 
     <!-- Premium UI, Gamified Cybersecurity Elements, & Accessibility Layout Styles -->
     <style>
@@ -535,7 +535,7 @@ $flash = take_flash();
         <div class="container-fluid px-lg-4">
             <!-- Dynamic Brand Logo with Cybercity branding -->
             <a href="<?= BASE_URL; ?>index.php" class="navbar-brand d-flex align-items-center me-4">
-                <img src="<?= BASE_URL; ?>assets/img/logoGeneric.png" alt="CyberCity Home" style="transition: height 0.3s ease; height: 52px; width: auto; filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.15));">
+                <img src="<?= BASE_URL; ?>assets/img/logoCorp.png" alt="CyberCity Home" style="transition: height 0.3s ease; height: 52px; width: auto; filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.15));">
             </a>
 
             <!-- High-tech responsive grid menu toggler -->
@@ -588,7 +588,7 @@ $flash = take_flash();
 
                     <!-- Feedback with Signal Transmission icon -->
                     <li class="nav-item cc-nav-item">
-                        <a href="https://forms.gle/jgYrmMZesgtVhBZ39" class="nav-link px-3 cc-nav-link" target="_blank">
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSel19klftg63BgG2yAMrCPKuZaU0AZdYziMsr4jQjonr59l5g/viewform?usp=publish-editor" class="nav-link px-3 cc-nav-link" target="_blank">
                             <i class="bi bi-send-check text-success"></i> Feedback
                         </a>
                     </li>

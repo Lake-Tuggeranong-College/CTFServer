@@ -26,6 +26,7 @@ date_default_timezone_set("Australia/Sydney");
 
     // Create PDO instance
     try {
+        /** @var PDO $conn */
         $conn = new PDO("mysql:host=$serverHost;dbname=$dbName", $dbUsr, $dbPwd, $pdoFullOpt);
         // echo "Connected successfully";
        
