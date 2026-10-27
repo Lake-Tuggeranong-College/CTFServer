@@ -535,7 +535,7 @@ $flash = take_flash();
         <div class="container-fluid px-lg-4">
             <!-- Dynamic Brand Logo with Cybercity branding -->
             <a href="<?= BASE_URL; ?>index.php" class="navbar-brand d-flex align-items-center me-4">
-                <img src="<?= BASE_URL; ?>assets/img/logoGeneric.png" alt="CyberCity Home" style="transition: height 0.3s ease; height: 52px; width: auto; filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.15));">
+                <img src="<?= BASE_URL; ?>assets/img/logoCorp.png" alt="CyberCity Home" style="transition: height 0.3s ease; height: 52px; width: auto; filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.15));">
             </a>
 
             <!-- High-tech responsive grid menu toggler -->
