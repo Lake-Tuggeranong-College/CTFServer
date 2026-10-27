@@ -1,0 +1,7 @@
+[//]: # (Example of the tabs.)
+
+<tabs>
+<tab title="Hint 1">Every device on a subnet belongs to a range of IP addresses. Think about what the /24 tells you about this network.</tab>
+<tab title="Hint 2">A /24 subnet uses the subnet mask 255.255.255.0. The network address and broadcast address are reserved, leaving the addresses in between for hosts.</tab>
+<tab title="Hint 3">The default gateway is commonly assigned the first usable host address in the subnet. Find the address immediately after the Network ID.</tab>
+</tabs>

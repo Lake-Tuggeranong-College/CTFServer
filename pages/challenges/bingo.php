@@ -23,7 +23,7 @@ $challenges = [
     ['Docker: Mega Hack', 'CTF{hackdocker}'],
     ['Intel Recon', 'CTF{time_of_meeting:1pm}'],
     ['So Many Possibilities', 'CTF{passwordabc}'],
-    ['Free space', 'CTF{Free_space}'],
+    ['breach the SSH server', 'CTF{name: graham, age: 54, title: leader}'],
     ['Find the Hideouts Location', 'CTF{LOCATION:5001, 2535, USA}'],
     ['Sewers', 'CTF{Secret_Base_Location}'],
     ['Free space', 'CTF{Free_space}'],
