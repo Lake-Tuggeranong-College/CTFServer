@@ -1,4 +1,4 @@
-# The anonymous Host
+# The Anonymous Host
 
 #### Hint 1
 Not every IP address that appears in a connection log belongs to a device on the public internet. Look for differences in the addresses.
