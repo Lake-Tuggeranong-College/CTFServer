@@ -125,7 +125,7 @@ $flash = take_flash();
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/moduleList.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/leaderboard.css">
     <link rel="stylesheet" type="text/css" href="<?= BASE_URL; ?>assets/css/editAccount.css">
-    <link class="cc-favicon" rel="icon" type="image/png" href="<?= BASE_URL; ?>assets/img/CCLogo.png">
+    <link class="cc-favicon" rel="icon" type="image/png" href="<?= BASE_URL; ?>assets/img/logoCorp.png">
 
     <!-- Premium UI, Gamified Cybersecurity Elements, & Accessibility Layout Styles -->
     <style>
